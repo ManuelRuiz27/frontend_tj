@@ -1,0 +1,65 @@
+.input-file {
+  display: grid;
+  gap: 8px;
+}
+
+.input-file__label {
+  font-weight: 600;
+  color: var(--color-neutral-700);
+}
+
+.input-file__button {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-primary-500);
+  background: rgba(13, 122, 95, 0.08);
+  color: var(--color-primary-600);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-base), transform var(--transition-base);
+}
+
+.input-file__button:hover {
+  background: rgba(13, 122, 95, 0.14);
+  transform: translateY(-1px);
+}
+
+.input-file__filename {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-secondary-500);
+}
+
+.input-file__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.input-file__hint {
+  font-size: 0.85rem;
+  color: var(--color-neutral-500);
+  min-height: 20px;
+}
+
+.input-file--error .input-file__button {
+  border-color: var(--color-error);
+  background: rgba(198, 40, 40, 0.08);
+  color: var(--color-error);
+}
+
+.input-file__error {
+  color: var(--color-error);
+  font-weight: 500;
+}

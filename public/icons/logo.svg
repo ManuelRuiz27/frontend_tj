@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">Logotipo institucional</title>
+  <desc id="desc">Escudo simplificado de la Ciudad de México</desc>
+  <circle cx="60" cy="60" r="58" fill="#0d7a5f" opacity="0.85" />
+  <path
+    d="M28 64l18-32 14 24 14-24 18 32-20 0-12 20-12-20z"
+    fill="#ffffff"
+    stroke="#ffffff"
+    stroke-width="4"
+    stroke-linejoin="round"
+  />
+</svg>
