@@ -3,6 +3,7 @@ import Main from './pages/Main';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Catalog from './pages/Catalog';
+import MapPage from './pages/Map';
 
 const App = () => (
   <BrowserRouter>
@@ -11,6 +12,7 @@ const App = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
       <Route path="/catalog" element={<Catalog />} />
+      <Route path="/map" element={<MapPage />} />
     </Routes>
   </BrowserRouter>
 );
