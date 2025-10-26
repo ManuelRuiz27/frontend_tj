@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import './A2HSBanner.css';
+import { track } from '../lib/analytics';
 
 const DISMISS_KEY = 'tj_a2hs_dismissed_at';
 const DISMISS_DURATION = 1000 * 60 * 60 * 24 * 7; // 7 días
@@ -74,6 +75,7 @@ const A2HSBanner = () => {
     const handleAppInstalled = () => {
       setDeferredPrompt(null);
       hideBanner();
+      track('installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -91,6 +93,7 @@ const A2HSBanner = () => {
     }
 
     try {
+      track('install_click');
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === 'accepted') {

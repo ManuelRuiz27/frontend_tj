@@ -67,7 +67,8 @@ button {
 }
 
 :focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
   box-shadow: var(--shadow-focus);
   border-radius: 6px;
 }
