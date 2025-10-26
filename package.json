@@ -21,7 +21,6 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/focus-trap-react": "^10.1.2",
     "@vitejs/plugin-react": "^4.0.0",
     "@testing-library/react": "^14.1.2",
     "jest-axe": "^9.0.0",
