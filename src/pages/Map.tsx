@@ -5,6 +5,7 @@ import {
   Benefit,
   useLazyGetCatalogQuery,
 } from '../features/catalog/catalogSlice';
+import { track } from '../lib/analytics';
 import './Map.css';
 
 const MAPS_URL = import.meta.env.VITE_MAPS_URL ?? '';
@@ -21,6 +22,10 @@ const MapPage = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const [fetchCatalog, { data, isLoading, isFetching, isError }] = useLazyGetCatalogQuery();
+
+  useEffect(() => {
+    track('open_map');
+  }, []);
 
   useEffect(() => {
     fetchCatalog({
@@ -95,15 +100,34 @@ const MapPage = () => {
   const handleCategoryChange = (category?: string) => {
     setSelectedCategory(category);
     setSelectedBenefitId(undefined);
+    track('filter', {
+      origin: 'map',
+      type: 'category',
+      value: category ?? 'all',
+    });
   };
 
   const handleMunicipalityChange = (municipality?: string) => {
     setSelectedMunicipality(municipality);
     setSelectedBenefitId(undefined);
+    track('filter', {
+      origin: 'map',
+      type: 'municipality',
+      value: municipality ?? 'all',
+    });
   };
 
   const handleSearch = () => {
-    setAppliedQuery(query.trim());
+    const trimmed = query.trim();
+    setAppliedQuery(trimmed);
+    if (trimmed) {
+      track('search', {
+        origin: 'map',
+        query: trimmed,
+        category: selectedCategory,
+        municipality: selectedMunicipality,
+      });
+    }
   };
 
   const handleReset = () => {
@@ -112,10 +136,19 @@ const MapPage = () => {
     setQuery('');
     setAppliedQuery('');
     setSelectedBenefitId(undefined);
+    track('filter', {
+      origin: 'map',
+      action: 'reset',
+    });
   };
 
   const handleSelect = (benefit: Benefit) => {
     setSelectedBenefitId(benefit.id);
+    track('open_merchant', {
+      origin: 'map',
+      id: benefit.id,
+      name: benefit.name,
+    });
   };
 
   return (

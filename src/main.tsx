@@ -4,6 +4,9 @@ import { Provider } from 'react-redux';
 import App from './App';
 import { store } from './store';
 import './styles/theme.css';
+import { initSentry } from './lib/sentry';
+
+initSentry();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

@@ -15,8 +15,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@sentry/browser": ["./src/vendor/sentry-browser"]
+    }
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "references": [{ "path": "tsconfig.node.json" }]
 }

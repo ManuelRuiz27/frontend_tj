@@ -7,6 +7,7 @@ import {
   Benefit,
   useLazyGetCatalogQuery,
 } from '../features/catalog/catalogSlice';
+import { track } from '../lib/analytics';
 
 const skeletonArray = Array.from({ length: 6 }, (_, index) => index);
 
@@ -93,6 +94,11 @@ const Catalog = () => {
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
+    track('filter', {
+      origin: 'catalog',
+      type: 'category',
+      value: category ?? 'all',
+    });
   };
 
   const handleMunicipalityChange = (municipality?: string) => {
@@ -100,13 +106,27 @@ const Catalog = () => {
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
+    track('filter', {
+      origin: 'catalog',
+      type: 'municipality',
+      value: municipality ?? 'all',
+    });
   };
 
   const handleSearch = () => {
-    setAppliedQuery(query.trim());
+    const trimmed = query.trim();
+    setAppliedQuery(trimmed);
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
+    if (trimmed) {
+      track('search', {
+        origin: 'catalog',
+        query: trimmed,
+        category: selectedCategory,
+        municipality: selectedMunicipality,
+      });
+    }
   };
 
   const handleReset = () => {
@@ -117,11 +137,20 @@ const Catalog = () => {
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
+    track('filter', {
+      origin: 'catalog',
+      action: 'reset',
+    });
   };
 
   const openModal = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     setIsModalOpen(true);
+    track('open_merchant', {
+      origin: 'catalog',
+      id: benefit.id,
+      name: benefit.name,
+    });
   };
 
   const closeModal = () => {
