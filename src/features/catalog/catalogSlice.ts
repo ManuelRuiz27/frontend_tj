@@ -1,6 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { apiBaseQuery } from '../../lib/apiClient';
 
 export interface Benefit {
   id: string;
@@ -82,9 +81,7 @@ const uniqueValues = (values: Array<string | undefined>): string[] =>
 
 export const catalogApi = createApi({
   reducerPath: 'catalogApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-  }),
+  baseQuery: apiBaseQuery,
   tagTypes: ['Catalog'],
   endpoints: (builder) => ({
     getCatalog: builder.query<CatalogResponse, CatalogQueryArgs | void>({

@@ -1,35 +1,43 @@
 # frontend_tj
 
-Frontend del proyecto Tarjeta Joven construido con React, TypeScript y Vite. Este paquete proporciona la interfaz de usuario para consumir el backend y exponer las funcionalidades principales del programa.
+Frontend del proyecto Tarjeta Joven construido con React, TypeScript y Vite. La aplicacion consume el backend oficial y expone las funcionalidades principales del programa para las personas usuarias.
 
 ## Requisitos previos
 - Node.js 18 o superior.
-- npm 9 o superior (se instala junto a Node).
+- npm 9 o superior (incluido con Node).
 
-## Instalación
+## Instalacion
 ```bash
 npm install
 ```
 
-## Configuración de entorno
-1. Copia el archivo `.env.example` a `.env`.
-2. Ajusta las variables según el entorno:
-   - `VITE_API_URL`: URL base del backend (por ejemplo `http://localhost:8080/api/v1` en desarrollo).
-   - `VITE_MAPS_URL`: URL de Google MyMaps que se embeberá en la vista de mapa.
+## Configuracion de entorno
+1. Copia el archivo `.env.example` a `.env` si aun no existe.
+2. Ajusta las variables segun el entorno objetivo:
+   - `VITE_API_URL`: URL base del backend. En desarrollo local usa `http://localhost:8080/api/v1`. Tambien puedes definir `/api/v1` para aprovechar el proxy que expone Vite y evitar configuraciones de CORS.
+   - `VITE_MAPS_URL`: URL publica de Google MyMaps que se muestra en la vista de mapa.
 
-Recuerda que `.env` ya está ignorado por Git y no se versiona.
+Las peticiones se envian con `credentials: include` y cabeceras `Authorization` cuando hay una sesion activa. Si el backend responde con un `401` la sesion local se limpia de forma automatica.
 
-## Scripts disponibles
-- `npm run dev`: levanta el servidor de desarrollo con recarga en caliente.
-- `npm run build`: compila el proyecto para producción.
-- `npm run preview`: sirve la versión compilada para verificación local.
+## Autenticacion
+- `useAuth` administra los tokens (`accessToken`, `refreshToken`), persiste el estado en `localStorage` y expone `login`, `logout`, `authenticateWithTokens` y `refreshProfile`. La funcion `login` envia `{ curp, password }` a `POST /api/v1/auth/login`, normalizando la CURP a mayusculas antes de enviarla. Tras autenticar obtiene el perfil desde `GET /api/v1/me` y limpia la sesion ante errores `401`.
+- El formulario de `src/pages/Login.tsx` captura CURP y contrasena, valida que la CURP cumpla con el formato oficial y que la contrasena tenga al menos 8 caracteres, y muestra estados de carga o errores segun la respuesta del backend.
+- `useOTP` continua disponible para flujos que requieran envio y verificacion de codigos OTP mediante los endpoints `POST /api/v1/auth/otp/send` y `POST /api/v1/auth/otp/verify`.
+
+## Desarrollo y verificacion
+- `npm run dev`: levanta el servidor de desarrollo en `http://localhost:3000` con proxy hacia `http://localhost:8080` para rutas que comienzan con `/api`.
+- `npm run build`: compila el proyecto para produccion (ejecuta `tsc` y `vite build`). Este comando se ejecuto tras los ultimos cambios.
+- `npm run preview`: sirve la build generada para validacion local.
+
+Durante el desarrollo valida el flujo de catalogo y autenticacion apuntando el backend a `http://localhost:8080`. Comprueba que puedas iniciar sesion con una CURP valida y que al cerrar sesion se limpie el estado almacenado.
 
 ## Estructura principal
-- `src/`: código fuente de la aplicación.
-- `public/`: archivos estáticos que Vite sirve sin procesar.
-- `dist/`: salida generada después de ejecutar `npm run build` (no se versiona).
+- `src/`: codigo fuente de la aplicacion.
+- `public/`: archivos estaticos servidos sin procesamiento por Vite.
+- `dist/`: salida generada despues de `npm run build` (no se versiona).
 
-## Contribución
-Antes de abrir un Pull Request asegúrate de:
-- Actualizar dependencias y scripts si añadiste nuevas herramientas.
-- Ejecutar los comandos de compilación correspondientes (`npm run build`) para verificar que no haya errores.
+## Contribucion
+Antes de abrir un Pull Request asegurate de:
+- Probar los comandos principales (`npm run dev` y `npm run build`).
+- Documentar cualquier nueva variable de entorno requerida.
+- Anadir pruebas o pasos de verificacion manual cuando apliquen.

@@ -4,9 +4,8 @@ import './Register.css';
 
 const CURP_REGEX =
   /^[A-Z]{1}[AEIOUX]{1}[A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[HM]{1}(?:AS|BC|BS|CC|CL|CM|CS|CH|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d]{1}\d{1}$/;
-
 const DATE_REGEX = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-
+const PASSWORD_MIN_LENGTH = 8;
 const fileAccept = '.jpg,.jpeg,.png,.pdf';
 
 type RegisterFormState = {
@@ -15,41 +14,50 @@ type RegisterFormState = {
   fechaNacimiento: string;
   curp: string;
   colonia: string;
+  password: string;
   aceptaTerminos: boolean;
 };
 
-const initialState: RegisterFormState = {
+const initialFormState: RegisterFormState = {
   nombres: '',
   apellidos: '',
   fechaNacimiento: '',
   curp: '',
   colonia: '',
-  aceptaTerminos: false
+  password: '',
+  aceptaTerminos: false,
+};
+
+const initialTouched: Record<keyof RegisterFormState, boolean> = {
+  nombres: false,
+  apellidos: false,
+  fechaNacimiento: false,
+  curp: false,
+  colonia: false,
+  password: false,
+  aceptaTerminos: false,
 };
 
 const Register = () => {
-  const [formData, setFormData] = useState<RegisterFormState>(initialState);
-  const [touched, setTouched] = useState<Record<keyof RegisterFormState, boolean>>({
-    nombres: false,
-    apellidos: false,
-    fechaNacimiento: false,
-    curp: false,
-    colonia: false,
-    aceptaTerminos: false
-  });
+  const [formData, setFormData] = useState<RegisterFormState>(initialFormState);
+  const [touched, setTouched] = useState(initialTouched);
   const [files, setFiles] = useState({
     ine: { file: null as File | null, error: '' },
     comprobante: { file: null as File | null, error: '' },
-    curpDoc: { file: null as File | null, error: '' }
+    curpDoc: { file: null as File | null, error: '' },
   });
-  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const validateText = (value: string) => value.trim().length >= 2;
 
   const validateDate = (value: string) => {
-    if (!DATE_REGEX.test(value)) return false;
+    if (!DATE_REGEX.test(value)) {
+      return false;
+    }
+
     const [day, month, year] = value.split('/').map(Number);
     const date = new Date(year, month - 1, day);
+
     return (
       date.getFullYear() === year &&
       date.getMonth() === month - 1 &&
@@ -59,44 +67,54 @@ const Register = () => {
   };
 
   const validateCurp = (value: string) => CURP_REGEX.test(value.toUpperCase());
+  const validatePassword = (value: string) => value.trim().length >= PASSWORD_MIN_LENGTH;
 
   const validateFile = (file: File | null) => {
-    if (!file) return 'Este archivo es obligatorio.';
+    if (!file) {
+      return 'Este archivo es obligatorio.';
+    }
+
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      return 'Formato no válido. Usa JPG, PNG o PDF.';
+      return 'Formato no valido. Usa JPG, PNG o PDF.';
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      return 'El archivo debe pesar máximo 2MB.';
+      return 'El archivo debe pesar maximo 2MB.';
     }
 
     return '';
   };
 
-  const errors = useMemo(() => ({
-    nombres: validateText(formData.nombres) ? '' : 'Ingresa tu nombre completo.',
-    apellidos: validateText(formData.apellidos) ? '' : 'Ingresa tus apellidos.',
-    fechaNacimiento: validateDate(formData.fechaNacimiento)
-      ? ''
-      : 'Usa el formato DD/MM/AAAA y verifica que seas mayor de 15 años.',
-    curp: validateCurp(formData.curp) ? '' : 'Revisa tu CURP. Debe coincidir con el formato oficial.',
-    colonia: validateText(formData.colonia) ? '' : 'Ingresa la colonia donde resides.',
-    aceptaTerminos: formData.aceptaTerminos ? '' : 'Debes aceptar los términos y políticas.'
-  }), [formData]);
+  const errors = useMemo(
+    () => ({
+      nombres: validateText(formData.nombres) ? '' : 'Ingresa tu nombre completo.',
+      apellidos: validateText(formData.apellidos) ? '' : 'Ingresa tus apellidos.',
+      fechaNacimiento: validateDate(formData.fechaNacimiento)
+        ? ''
+        : 'Usa el formato DD/MM/AAAA y verifica que seas mayor de 15 anos.',
+      curp: validateCurp(formData.curp) ? '' : 'Revisa tu CURP. Debe coincidir con el formato oficial.',
+      colonia: validateText(formData.colonia) ? '' : 'Ingresa la colonia donde resides.',
+      password: validatePassword(formData.password)
+        ? ''
+        : `Tu contrasena debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres.`,
+      aceptaTerminos: formData.aceptaTerminos ? '' : 'Debes aceptar los terminos y politicas.',
+    }),
+    [formData],
+  );
 
   const handleInputChange = (field: keyof RegisterFormState, value: string | boolean) => {
     setStatusMessage('');
     setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleBlur = (field: keyof RegisterFormState) => {
     setTouched((prev) => ({
       ...prev,
-      [field]: true
+      [field]: true,
     }));
   };
 
@@ -106,7 +124,7 @@ const Register = () => {
       const errorMessage = file ? validateFile(file) : 'Este archivo es obligatorio.';
       return {
         ...prev,
-        [key]: { file: errorMessage ? null : file, error: errorMessage }
+        [key]: { file: errorMessage ? null : file, error: errorMessage },
       };
     });
   };
@@ -119,13 +137,14 @@ const Register = () => {
       fechaNacimiento: true,
       curp: true,
       colonia: true,
-      aceptaTerminos: true
+      password: true,
+      aceptaTerminos: true,
     });
 
     const fileErrors = {
       ine: validateFile(files.ine.file),
       comprobante: validateFile(files.comprobante.file),
-      curpDoc: validateFile(files.curpDoc.file)
+      curpDoc: validateFile(files.curpDoc.file),
     };
 
     const hasErrors =
@@ -134,11 +153,11 @@ const Register = () => {
     setFiles((prev) => ({
       ine: { file: fileErrors.ine ? null : prev.ine.file, error: fileErrors.ine },
       comprobante: { file: fileErrors.comprobante ? null : prev.comprobante.file, error: fileErrors.comprobante },
-      curpDoc: { file: fileErrors.curpDoc ? null : prev.curpDoc.file, error: fileErrors.curpDoc }
+      curpDoc: { file: fileErrors.curpDoc ? null : prev.curpDoc.file, error: fileErrors.curpDoc },
     }));
 
     if (!hasErrors) {
-      setStatusMessage('¡Registro enviado! Te avisaremos por correo cuando sea validado.');
+      setStatusMessage('Registro enviado. Te avisaremos por correo cuando sea validado.');
     } else {
       setStatusMessage('Por favor corrige los campos resaltados.');
     }
@@ -148,7 +167,7 @@ const Register = () => {
     <main className="register" aria-labelledby="register-title">
       <header className="register__header">
         <h1 id="register-title">Registro Tarjeta Joven</h1>
-        <p>Completa la información. Validaremos tus documentos en un máximo de 48 horas.</p>
+        <p>Completa la informacion. Validaremos tus documentos en un maximo de 48 horas.</p>
       </header>
       <form className="register__form" onSubmit={handleSubmit} noValidate>
         <fieldset className="register__fieldset">
@@ -205,7 +224,7 @@ const Register = () => {
                 id="curp"
                 name="curp"
                 type="text"
-                value={formData.curp.toUpperCase()}
+                value={formData.curp}
                 onChange={(event) => handleInputChange('curp', event.target.value.toUpperCase())}
                 onBlur={() => handleBlur('curp')}
                 maxLength={18}
@@ -227,15 +246,31 @@ const Register = () => {
             />
             {touched.colonia && errors.colonia && <p className="register__error">{errors.colonia}</p>}
           </div>
+          <div className={`register__field ${touched.password && errors.password ? 'is-invalid' : ''}`}>
+            <label htmlFor="password">Contrasena de acceso</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={(event) => handleInputChange('password', event.target.value)}
+              onBlur={() => handleBlur('password')}
+              minLength={PASSWORD_MIN_LENGTH}
+              placeholder="Define una contrasena segura"
+              autoComplete="new-password"
+              required
+            />
+            {touched.password && errors.password && <p className="register__error">{errors.password}</p>}
+          </div>
         </fieldset>
 
         <fieldset className="register__fieldset">
           <legend>Documentos</legend>
           <InputFile
-            label="Identificación oficial (INE)"
+            label="Identificacion oficial (INE)"
             accept={fileAccept}
             required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Máximo 2MB."
+            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
             error={files.ine.error}
             onFileSelect={(file) => handleFileChange('ine', file)}
           />
@@ -243,7 +278,7 @@ const Register = () => {
             label="Comprobante de domicilio"
             accept={fileAccept}
             required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Máximo 2MB."
+            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
             error={files.comprobante.error}
             onFileSelect={(file) => handleFileChange('comprobante', file)}
           />
@@ -251,7 +286,7 @@ const Register = () => {
             label="CURP digital"
             accept={fileAccept}
             required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Máximo 2MB."
+            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
             error={files.curpDoc.error}
             onFileSelect={(file) => handleFileChange('curpDoc', file)}
           />
@@ -268,8 +303,8 @@ const Register = () => {
             required
           />
           <label htmlFor="aceptaTerminos">
-            He leído y acepto los <a href="#terminos">Términos de uso</a> y la{' '}
-            <a href="#privacidad">Política de privacidad</a>.
+            He leido y acepto los <a href="#terminos">Terminos de uso</a> y la{' '}
+            <a href="#privacidad">Politica de privacidad</a>.
           </label>
         </div>
         {touched.aceptaTerminos && errors.aceptaTerminos && (
