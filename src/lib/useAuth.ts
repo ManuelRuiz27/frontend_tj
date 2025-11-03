@@ -101,6 +101,28 @@ export const useAuth = () => {
     [applyTokens],
   );
 
+  const loginAsGuest = useCallback(() => {
+    const guestTokens: AuthTokens = {
+      accessToken: 'guest-access-token',
+      refreshToken: null,
+    };
+
+    skipNextProfileFetch.current = true;
+    persistTokens(guestTokens);
+    setTokens(guestTokens);
+    setUser({
+      id: 'guest',
+      nombre: 'Invitado',
+      apellidos: 'Temporal',
+      curp: 'INVITADOPRUEBA0001',
+      email: null,
+      municipio: null,
+      telefono: null,
+    });
+    setStatus('authenticated');
+    setErrorMessage(null);
+  }, []);
+
   const authenticateWithTokens = useCallback(
     async (authTokens: AuthTokens) => {
       const profile = await applyTokens(authTokens);
@@ -163,6 +185,7 @@ export const useAuth = () => {
     login,
     logout,
     authenticateWithTokens,
+    loginAsGuest,
     refreshProfile: fetchProfile,
   };
 };
