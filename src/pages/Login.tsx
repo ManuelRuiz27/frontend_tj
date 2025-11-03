@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import './Login.css';
 
@@ -13,6 +13,7 @@ const Login = () => {
   const [formError, setFormError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const { login, loginAsGuest, status: authStatus, errorMessage } = useAuth();
+  const navigate = useNavigate();
 
   const isCurpValid = useMemo(() => CURP_REGEX.test(curp.trim()), [curp]);
   const isPasswordValid = password.length >= PASSWORD_MIN_LENGTH;
@@ -22,8 +23,9 @@ const Login = () => {
     if (authStatus === 'authenticated') {
       setStatusMessage('Bienvenido. Te estamos redirigiendo a tu tablero.');
       setFormError('');
+      navigate('/catalog', { replace: true });
     }
-  }, [authStatus]);
+  }, [authStatus, navigate]);
 
   useEffect(() => {
     if (errorMessage && authStatus !== 'authenticated') {
