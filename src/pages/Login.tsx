@@ -12,7 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const { login, status: authStatus, errorMessage } = useAuth();
+  const { login, loginAsGuest, status: authStatus, errorMessage } = useAuth();
 
   const isCurpValid = useMemo(() => CURP_REGEX.test(curp.trim()), [curp]);
   const isPasswordValid = password.length >= PASSWORD_MIN_LENGTH;
@@ -57,6 +57,12 @@ const Login = () => {
       const message = error instanceof Error ? error.message : 'No pudimos iniciar sesion. Intenta nuevamente.';
       setFormError(message);
     }
+  };
+
+  const handleGuestAccess = () => {
+    setFormError('');
+    setStatusMessage('Ingresaste en modo de pruebas.');
+    loginAsGuest();
   };
 
   return (
@@ -110,6 +116,14 @@ const Login = () => {
 
           <button type="submit" className="login__submit" disabled={!canSubmit}>
             {authStatus === 'loading' ? 'Verificando...' : 'Iniciar sesion'}
+          </button>
+          <button
+            type="button"
+            className="login__send"
+            onClick={handleGuestAccess}
+            disabled={authStatus === 'loading'}
+          >
+            Acceder sin credenciales
           </button>
           <p className="login__status" role="status" aria-live="polite">
             {formError || statusMessage}
