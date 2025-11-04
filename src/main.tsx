@@ -6,6 +6,7 @@ import App from './App';
 import { store } from './store';
 import './styles/theme.css';
 import { initSentry } from './lib/sentry';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 initSentry();
 
@@ -25,5 +26,6 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <Provider store={store}>
       <App />
     </Provider>
+    <SpeedInsights />
   </React.StrictMode>
 );
