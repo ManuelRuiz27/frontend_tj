@@ -16,6 +16,12 @@ npm install
 2. Ajusta las variables segun el entorno objetivo:
    - `VITE_API_URL`: URL base del backend. En desarrollo local usa `http://localhost:8080/api/v1`. Tambien puedes definir `/api/v1` para aprovechar el proxy que expone Vite y evitar configuraciones de CORS.
    - `VITE_MAPS_URL`: URL publica de Google MyMaps que se muestra en la vista de mapa.
+   - `VITE_ANALYTICS_URL`: endpoint HTTP al que se envian los eventos de analitica. Dejalo vacio para deshabilitar el envio (se mantendra el log en localStorage).
+   - `VITE_SENTRY_DSN`: DSN publico del proyecto en Sentry para capturar errores en frontend.
+   - `VITE_SENTRY_RELEASE`: identificador de release que veras en Sentry. Si no se define se tomara `VITE_APP_VERSION` o `VITE_COMMIT_SHA` (con el prefijo `frontend_tj@`) y, en ultima instancia, el `mode` de Vite.
+   - `VITE_APP_VERSION` / `VITE_COMMIT_SHA`: valores opcionales que se propagan a Sentry y ayudan a identificar la version desplegada.
+
+El archivo `src/config/env.ts` centraliza la lectura de estas variables, define valores por defecto seguros para desarrollo y facilita su consulta desde cualquier modulo.
 
 Las peticiones se envian con `credentials: include` y cabeceras `Authorization` cuando hay una sesion activa. Si el backend responde con un `401` la sesion local se limpia de forma automatica.
 
@@ -32,17 +38,21 @@ Las peticiones se envian con `credentials: include` y cabeceras `Authorization` 
 Durante el desarrollo valida el flujo de catalogo y autenticacion apuntando el backend a `http://localhost:8080`. Comprueba que puedas iniciar sesion con una CURP valida y que al cerrar sesion se limpie el estado almacenado.
 
 ## Despliegue en Vercel
-1. Asegurate de tener una cuenta en [Vercel](https://vercel.com/) y haber instalado el CLI (`npm i -g vercel`) si deseas desplegar desde la terminal.
-2. Configura las variables de entorno necesarias desde el panel de proyecto o con `vercel env`:
-   - `VITE_API_URL`: URL del backend accesible desde Vercel (por ejemplo `https://api.midominio.com/api/v1`).
-   - `VITE_MAPS_URL`: URL publica de Google MyMaps.
-3. Ejecuta `vercel` (primer deploy) y selecciona:
-   - Framework: `Vite`.
-   - Comando de build: `npm run build`.
-   - Directorio de salida: `dist`.
-4. Subsecuentes despliegues pueden realizarse con `vercel --prod` o conectando el repositorio a Vercel para builds automaticos.
+### Deploy automatizado mediante GitHub
+1. Sube el proyecto a GitHub (por ejemplo a la rama `main`) y verifica que la configuracion en `vercel.json` y `package.json` este versionada.
+2. En Vercel selecciona **Add New > Project** y elige **Import Git Repository**. Autoriza el acceso al repositorio si es la primera vez.
+3. Cuando el asistente detecte el framework deja el preset `Vite`. Valida que el comando de build sea `npm run build` y el directorio de salida `dist` (se toman de `package.json` y `vercel.json` respectivamente).
+4. En la seccion **Environment Variables** agrega los valores documentados en el apartado anterior (`VITE_API_URL`, `VITE_MAPS_URL`, `VITE_ANALYTICS_URL`, `VITE_SENTRY_DSN`, `VITE_SENTRY_RELEASE`, `VITE_APP_VERSION`, `VITE_COMMIT_SHA`). Puedes reutilizar un Environment Group para compartirlas entre `Production`, `Preview` y `Development`.
+5. Define la rama de produccion (por ejemplo `main`) y habilita deploys previos automaticos para las demas ramas que necesites revisar.
+6. Haz clic en **Deploy**. Vercel instalara dependencias, ejecutara `npm run build` y publicara la primera version productiva.
+7. A partir de este punto cada `git push` generara un deploy de Preview y los cambios que lleguen a la rama de produccion ejecutaran un deploy productivo sin intervencion manual.
 
-El archivo `vercel.json` ya incluye la configuracion de SPA (sirve `index.html` como fallback) y limpia las URLs. Ajusta las reglas de `rewrites` si necesitas apuntar `/api` a un backend especifico.
+El archivo `vercel.json` ya incluye la configuracion de SPA (`index.html` como fallback) y secciona los rewrites para la API. Ajusta las reglas si deseas apuntar `/api` hacia otro dominio o si necesitas cabeceras adicionales.
+
+### Deploy manual con CLI
+1. Instala el CLI (`npm i -g vercel`) y autenticate con `vercel login`.
+2. Configura las variables de entorno con `vercel env pull`/`vercel env add` o desde el panel web.
+3. Ejecuta `vercel` para generar una Preview y `vercel --prod` cuando desees promover la build a produccion.
 
 ## Estructura principal
 - `src/`: codigo fuente de la aplicacion.

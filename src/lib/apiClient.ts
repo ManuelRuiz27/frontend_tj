@@ -1,9 +1,9 @@
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { env } from '../config/env';
 import { clearStoredTokens, getStoredTokens } from './authStorage';
 
-const DEFAULT_BASE_URL = '/api/v1';
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? DEFAULT_BASE_URL;
+const API_BASE_URL = env.apiBaseUrl;
 
 const buildUrl = (path: string) => {
   if (/^https?:\/\//i.test(path)) {

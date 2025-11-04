@@ -5,10 +5,11 @@ import {
   Benefit,
   useLazyGetCatalogQuery,
 } from '../features/catalog/catalogSlice';
+import { env } from '../config/env';
 import { track } from '../lib/analytics';
 import './Map.css';
 
-const MAPS_URL = import.meta.env.VITE_MAPS_URL ?? '';
+const MAPS_URL = env.mapsUrl;
 
 const MapPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();

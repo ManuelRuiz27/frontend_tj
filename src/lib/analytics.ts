@@ -1,4 +1,6 @@
-const ANALYTICS_ENDPOINT = import.meta.env.VITE_ANALYTICS_URL;
+import { env } from '../config/env';
+
+const ANALYTICS_ENDPOINT = env.analyticsUrl;
 const STORAGE_KEY = 'tj_analytics_queue';
 
 export type AnalyticsEventName =
@@ -140,7 +142,7 @@ ensureListeners();
 void flushQueue();
 
 export const track = (event: AnalyticsEventName, payload?: AnalyticsPayload) => {
-  if (import.meta.env.DEV) {
+  if (env.isDev) {
     // eslint-disable-next-line no-console
     console.debug('[analytics]', event, payload ?? null);
   }
@@ -153,7 +155,7 @@ export const track = (event: AnalyticsEventName, payload?: AnalyticsPayload) => 
     event,
     payload: payload as Record<string, unknown> | undefined,
     timestamp: new Date().toISOString(),
-    environment: import.meta.env.MODE,
+    environment: env.mode,
   };
 
   queue.push(entry);
