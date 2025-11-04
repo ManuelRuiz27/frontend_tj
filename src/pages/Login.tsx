@@ -23,7 +23,7 @@ const Login = () => {
     if (authStatus === 'authenticated') {
       setStatusMessage('Bienvenido. Te estamos redirigiendo a tu tablero.');
       setFormError('');
-      navigate('/catalog', { replace: true });
+      navigate('/perfil', { replace: true });
     }
   }, [authStatus, navigate]);
 

@@ -4,12 +4,14 @@ import Main from './pages/Main';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Catalog from './pages/Catalog';
+import Profile from './pages/Profile';
 import MapPage from './pages/Map';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import PreferencesInitializer from './features/preferences/PreferencesInitializer';
 import Onboarding from './features/onboarding/Onboarding';
 import A2HSBanner from './components/A2HSBanner';
+import MobileNav from './components/MobileNav';
 import { track } from './lib/analytics';
 
 const App = () => {
@@ -27,10 +29,12 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/perfil" element={<Profile />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
       </Routes>
+      <MobileNav />
     </BrowserRouter>
   );
 };

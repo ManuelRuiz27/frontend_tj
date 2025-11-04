@@ -1,0 +1,39 @@
+import { NavLink, useLocation } from 'react-router-dom';
+import './MobileNav.css';
+
+const items = [
+  { to: '/perfil', label: 'Perfil' },
+  { to: '/catalog', label: 'Catálogo' },
+  { to: '/map', label: 'Mapa' },
+];
+
+const MobileNav = () => {
+  const location = useLocation();
+  const hiddenRoutes = ['/login', '/registro'];
+
+  if (hiddenRoutes.includes(location.pathname)) {
+    return null;
+  }
+
+  return (
+    <nav className="mobile-nav" aria-label="Navegación principal móvil">
+      <ul className="mobile-nav__list">
+        {items.map((item) => (
+          <li key={item.to} className="mobile-nav__item">
+            <NavLink
+              to={item.to}
+              className={({ isActive }) =>
+                `mobile-nav__link${isActive ? ' mobile-nav__link--active' : ''}`
+              }
+            >
+              <span className="mobile-nav__label">{item.label}</span>
+              <span className="mobile-nav__dot" aria-hidden="true" />
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
+export default MobileNav;

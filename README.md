@@ -31,6 +31,19 @@ Las peticiones se envian con `credentials: include` y cabeceras `Authorization` 
 
 Durante el desarrollo valida el flujo de catalogo y autenticacion apuntando el backend a `http://localhost:8080`. Comprueba que puedas iniciar sesion con una CURP valida y que al cerrar sesion se limpie el estado almacenado.
 
+## Despliegue en Vercel
+1. Asegurate de tener una cuenta en [Vercel](https://vercel.com/) y haber instalado el CLI (`npm i -g vercel`) si deseas desplegar desde la terminal.
+2. Configura las variables de entorno necesarias desde el panel de proyecto o con `vercel env`:
+   - `VITE_API_URL`: URL del backend accesible desde Vercel (por ejemplo `https://api.midominio.com/api/v1`).
+   - `VITE_MAPS_URL`: URL publica de Google MyMaps.
+3. Ejecuta `vercel` (primer deploy) y selecciona:
+   - Framework: `Vite`.
+   - Comando de build: `npm run build`.
+   - Directorio de salida: `dist`.
+4. Subsecuentes despliegues pueden realizarse con `vercel --prod` o conectando el repositorio a Vercel para builds automaticos.
+
+El archivo `vercel.json` ya incluye la configuracion de SPA (sirve `index.html` como fallback) y limpia las URLs. Ajusta las reglas de `rewrites` si necesitas apuntar `/api` a un backend especifico.
+
 ## Estructura principal
 - `src/`: codigo fuente de la aplicacion.
 - `public/`: archivos estaticos servidos sin procesamiento por Vite.

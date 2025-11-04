@@ -5,12 +5,12 @@ const Hero = () => {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__content">
-        <p className="hero__eyebrow">Tarjeta Joven CDMX</p>
+        <p className="hero__eyebrow">Tarjeta Joven</p>
         <h1 id="hero-title" className="hero__title">
-          Beneficios y oportunidades para jóvenes que transforman su ciudad
+          Beneficios y oportunidades para las juventudes
         </h1>
         <p className="hero__subtitle">
-          Accede a descuentos, actividades culturales y programas pensados para ti.
+          Accede a descuentos, actividades pensados para ti.
           Regístrate en minutos y comienza a disfrutar de tu credencial digital.
         </p>
         <div className="hero__actions" role="group" aria-label="Acciones principales">
@@ -25,10 +25,10 @@ const Hero = () => {
       <figure className="hero__figure">
         <img
           src="/icons/logo.svg"
-          alt="Gobierno de la Ciudad de México"
+          alt="Gobierno del Estado de San Luis Potosí"
           className="hero__image"
         />
-        <figcaption className="hero__tagline">Construimos futuro contigo</figcaption>
+      
       </figure>
     </section>
   );
