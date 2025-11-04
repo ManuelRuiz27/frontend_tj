@@ -1,5 +1,4 @@
 node_modules/
-dist/
 .git/
 .gitignore
 .vercel/
@@ -7,7 +6,6 @@ dist/
 tests/
 mocks/
 coverage/
-*.md
 *.log
 *.local
 *.env.local
