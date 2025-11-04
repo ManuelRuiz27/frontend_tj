@@ -3,8 +3,8 @@
 Frontend del proyecto Tarjeta Joven construido con React, TypeScript y Vite. La aplicacion consume el backend oficial y expone las funcionalidades principales del programa para las personas usuarias.
 
 ## Requisitos previos
-- Node.js 18 o superior.
-- npm 9 o superior (incluido con Node).
+- Node.js 22.x.
+- npm 10 o superior (incluido con Node 22).
 
 ## Instalacion
 ```bash
