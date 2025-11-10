@@ -6,25 +6,13 @@ import {
   persistTokens,
   subscribeToAuthChanges,
 } from './authStorage';
-import { apiFetch } from './apiClient';
+import { authApi } from './api/auth';
+import type { LoginRequest, UserProfile } from './api/auth';
 import type { ApiError } from './apiClient';
 
-export interface LoginCredentials {
-  curp: string;
-  password: string;
-}
-
-export interface UserProfile {
-  id: string;
-  nombre: string;
-  apellidos: string;
-  curp: string;
-  email?: string | null;
-  municipio?: string | null;
-  telefono?: string | null;
-}
-
 type AuthStatus = 'unauthenticated' | 'loading' | 'authenticated' | 'error';
+
+export type LoginCredentials = LoginRequest;
 
 const isApiError = (error: unknown): error is ApiError =>
   typeof error === 'object' && error !== null && 'status' in error;
@@ -38,7 +26,7 @@ export const useAuth = () => {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const profile = await apiFetch<UserProfile>('/me');
+      const profile = await authApi.profile();
       setUser(profile);
       setStatus('authenticated');
       setErrorMessage(null);
@@ -75,14 +63,11 @@ export const useAuth = () => {
       setErrorMessage(null);
 
       try {
-        const normalizedCurp = credentials.curp.trim().toUpperCase();
-        const authTokens = await apiFetch<AuthTokens>('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({
-            curp: normalizedCurp,
-            password: credentials.password,
-          }),
-        });
+        const normalizedCredentials: LoginRequest = {
+          username: credentials.username.trim(),
+          password: credentials.password,
+        };
+        const authTokens = await authApi.login(normalizedCredentials);
         const profile = await applyTokens(authTokens);
         if (!profile) {
           throw new Error('No pudimos completar el inicio de sesion.');
@@ -101,28 +86,6 @@ export const useAuth = () => {
     [applyTokens],
   );
 
-  const loginAsGuest = useCallback(() => {
-    const guestTokens: AuthTokens = {
-      accessToken: 'guest-access-token',
-      refreshToken: null,
-    };
-
-    skipNextProfileFetch.current = true;
-    persistTokens(guestTokens);
-    setTokens(guestTokens);
-    setUser({
-      id: 'guest',
-      nombre: 'Invitado',
-      apellidos: 'Temporal',
-      curp: 'INVITADOPRUEBA0001',
-      email: null,
-      municipio: null,
-      telefono: null,
-    });
-    setStatus('authenticated');
-    setErrorMessage(null);
-  }, []);
-
   const authenticateWithTokens = useCallback(
     async (authTokens: AuthTokens) => {
       const profile = await applyTokens(authTokens);
@@ -136,9 +99,7 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
-      await apiFetch<void>('/auth/logout', {
-        method: 'POST',
-      });
+      await authApi.logout();
     } catch (error) {
       if (!isApiError(error) || error.status >= 500) {
         setErrorMessage('No pudimos cerrar la sesion correctamente.');
@@ -185,7 +146,6 @@ export const useAuth = () => {
     login,
     logout,
     authenticateWithTokens,
-    loginAsGuest,
     refreshProfile: fetchProfile,
   };
 };

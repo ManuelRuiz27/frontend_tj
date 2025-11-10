@@ -8,6 +8,8 @@ import Profile from './pages/Profile';
 import MapPage from './pages/Map';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
+import CardholderLookup from './pages/CardholderLookup';
+import CardholderAccountSetup from './pages/CardholderAccountSetup';
 import PreferencesInitializer from './features/preferences/PreferencesInitializer';
 import Onboarding from './features/onboarding/Onboarding';
 import A2HSBanner from './components/A2HSBanner';
@@ -28,6 +30,8 @@ const App = () => {
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Register />} />
+        <Route path="/registro/tarjeta-fisica" element={<CardholderLookup />} />
+        <Route path="/registro/tarjeta-fisica/crear-usuario" element={<CardholderAccountSetup />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/map" element={<MapPage />} />

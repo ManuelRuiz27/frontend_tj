@@ -26,16 +26,22 @@ El archivo `src/config/env.ts` centraliza la lectura de estas variables, define 
 Las peticiones se envian con `credentials: include` y cabeceras `Authorization` cuando hay una sesion activa. Si el backend responde con un `401` la sesion local se limpia de forma automatica.
 
 ## Autenticacion
-- `useAuth` administra los tokens (`accessToken`, `refreshToken`), persiste el estado en `localStorage` y expone `login`, `logout`, `authenticateWithTokens` y `refreshProfile`. La funcion `login` envia `{ curp, password }` a `POST /api/v1/auth/login`, normalizando la CURP a mayusculas antes de enviarla. Tras autenticar obtiene el perfil desde `GET /api/v1/me` y limpia la sesion ante errores `401`.
-- El formulario de `src/pages/Login.tsx` captura CURP y contrasena, valida que la CURP cumpla con el formato oficial y que la contrasena tenga al menos 8 caracteres, y muestra estados de carga o errores segun la respuesta del backend.
+- `useAuth` administra los tokens (`accessToken`, `refreshToken`), persiste el estado en `localStorage` y expone `login`, `logout`, `authenticateWithTokens` y `refreshProfile`. La funcion `login` delega en `authApi.login` (`src/lib/api/auth.ts`), que envia `{ username, password }` a `POST /api/v1/auth/login`, normalizando el usuario con `trim()` antes de solicitar el perfil en `GET /api/v1/me`. Ante respuestas `401` limpia los tokens persistidos y borra la sesion local.
+- El formulario de `src/pages/Login.tsx` captura nombre de usuario y contrasena, valida que el usuario tenga al menos tres caracteres y que la contrasena tenga al menos 8 caracteres, y muestra estados de carga o errores segun la respuesta del backend.
 - `useOTP` continua disponible para flujos que requieran envio y verificacion de codigos OTP mediante los endpoints `POST /api/v1/auth/otp/send` y `POST /api/v1/auth/otp/verify`.
+
+## Flujo "Ya tengo tarjeta fisica"
+- Desde la pantalla de login se expone el boton **Ya tengo tarjeta fisica**, que lleva a `src/pages/CardholderLookup.tsx`. Esa vista (ruta `/registro/tarjeta-fisica`) valida el CURP contra `POST /api/v1/cardholders/lookup`.
+- Si la CURP existe, se navega al paso 2 (`/registro/tarjeta-fisica/crear-usuario`, componente `CardholderAccountSetup`) para capturar usuario y contrasena y llamar a `POST /api/v1/cardholders/{curp}/account`.
+- Cuando la CURP no existe se redirige automaticamente al formulario de registro (`/registro`) mostrando una snackbar informativa.
+- Los requisitos del backend para estos endpoints estan descritos en `docs/api-cardholders.md`.
 
 ## Desarrollo y verificacion
 - `npm run dev`: levanta el servidor de desarrollo en `http://localhost:3000` con proxy hacia `http://localhost:8080` para rutas que comienzan con `/api`.
 - `npm run build`: compila el proyecto para produccion (ejecuta `tsc` y `vite build`). Este comando se ejecuto tras los ultimos cambios.
 - `npm run preview`: sirve la build generada para validacion local.
 
-Durante el desarrollo valida el flujo de catalogo y autenticacion apuntando el backend a `http://localhost:8080`. Comprueba que puedas iniciar sesion con una CURP valida y que al cerrar sesion se limpie el estado almacenado.
+Durante el desarrollo valida el flujo de catalogo y autenticacion apuntando el backend a `http://localhost:8080`. Comprueba que puedas iniciar sesion con un usuario valido y que al cerrar sesion se limpie el estado almacenado.
 
 ## Despliegue en Vercel
 ### Deploy automatizado mediante GitHub
@@ -64,3 +70,142 @@ Antes de abrir un Pull Request asegurate de:
 - Probar los comandos principales (`npm run dev` y `npm run build`).
 - Documentar cualquier nueva variable de entorno requerida.
 - Anadir pruebas o pasos de verificacion manual cuando apliquen.
+
+## Análisis de Endpoints para Backend
+
+Esta sección documenta los endpoints que el frontend consume, con el objetivo de guiar el desarrollo del backend.
+
+### Consideraciones Generales
+
+*   **CORS (Cross-Origin Resource Sharing)**: El cliente está configurado para ejecutarse en un dominio diferente al del backend (`http://localhost:3000` vs. `http://localhost:8080` en desarrollo). El backend **debe** habilitar CORS para el dominio del frontend. Específicamente, necesita:
+    *   Permitir los métodos `GET`, `POST`.
+    *   Permitir las cabeceras `Authorization` y `Content-Type`.
+    *   Habilitar el envío de credenciales (`credentials: true`), ya que el frontend envía las cookies de sesión.
+*   **Formato de Datos**: La comunicación se realiza principalmente con formato **JSON**. El cliente envía `Content-Type: application/json` y espera recibir `Content-Type: application/json`. La única excepción es el endpoint de registro, que debería aceptar `multipart/form-data`.
+*   **Autenticación**: Las rutas protegidas deben esperar un token JWT en la cabecera `Authorization` con el formato `Bearer {token}`.
+*   **Respuestas de Error**: El frontend espera códigos de estado HTTP estándar. Una respuesta `401 Unauthorized` en cualquier endpoint protegido provocará que la sesión del usuario se limpie localmente. Los errores de validación (`400 Bad Request`) deberían devolver un cuerpo JSON con una propiedad `message` que describa el error.
+
+### Endpoints Identificados
+
+A continuación se detallan los endpoints extraídos del código fuente:
+
+#### Módulo de Autenticación (`/auth`)
+
+1.  **`POST /auth/login`**
+    *   **Descripción**: Autentica a un usuario y devuelve tokens de acceso.
+    *   **Request Body** (`application/json`):
+        ```json
+        {
+          "username": "string",
+          "password": "string"
+        }
+        ```
+    *   **Response Body** (`application/json`):
+        ```json
+        {
+          "accessToken": "string",
+          "refreshToken": "string"
+        }
+        ```
+
+2.  **`POST /auth/logout`**
+    *   **Descripción**: Invalida la sesión del usuario en el backend.
+    *   **Autenticación**: Requiere cabecera `Authorization: Bearer {token}`.
+    *   **Request Body**: Vacío.
+    *   **Response Body**: Vacío, con estado `200` o `204`.
+
+3.  **`POST /auth/otp/send`**
+    *   **Descripción**: Envía un código de un solo uso (OTP) al usuario para recuperación de cuenta o verificación.
+    *   **Request Body** (`application/json`):
+        ```json
+        {
+          "curp": "string"
+        }
+        ```
+    *   **Response Body**: Vacío, con estado `200`.
+
+4.  **`POST /auth/otp/verify`**
+    *   **Descripción**: Verifica un código OTP y, si es válido, devuelve tokens de autenticación.
+    *   **Request Body** (`application/json`):
+        ```json
+        {
+          "curp": "string",
+          "otp": "string"
+        }
+        ```
+    *   **Response Body** (`application/json`):
+        ```json
+        {
+          "accessToken": "string",
+          "refreshToken": "string"
+        }
+        ```
+
+#### Módulo de Usuario (`/me`)
+
+1.  **`GET /me`**
+    *   **Descripción**: Obtiene la información del perfil del usuario autenticado.
+    *   **Autenticación**: Requiere cabecera `Authorization: Bearer {token}`.
+    *   **Response Body** (`application/json`):
+        ```json
+        {
+          "id": "string",
+          "nombre": "string",
+          "apellidos": "string",
+          "curp": "string",
+          "email": "string | null",
+          "municipio": "string | null",
+          "telefono": "string | null"
+        }
+        ```
+
+#### Módulo de Catálogo (`/catalog`)
+
+1.  **`GET /catalog`**
+    *   **Descripción**: Obtiene la lista de beneficios o comercios.
+    *   **Autenticación**: Opcional. Puede ser pública.
+    *   **Query Parameters**:
+        *   `q` (string, opcional): Término de búsqueda.
+        *   `categoria` (string, opcional): Filtrar por categoría.
+        *   `municipio` (string, opcional): Filtrar por municipio.
+        *   `page` (number, opcional): Número de página para paginación.
+        *   `pageSize` (number, opcional): Tamaño de la página.
+    *   **Response Body** (`application/json`):
+        ```json
+        {
+          "items": [
+            {
+              "id": "string",
+              "nombre": "string",
+              "categoria": "string",
+              "municipio": "string",
+              "descuento": "string",
+              "direccion": "string | null",
+              "horario": "string | null",
+              "descripcion": "string | null",
+              "lat": "number | null",
+              "lng": "number | null"
+            }
+          ],
+          "total": "number",
+          "page": "number",
+          "pageSize": "number",
+          "totalPages": "number"
+        }
+        ```
+
+#### Módulo de Registro (`/register`)
+
+1.  **`POST /register`** (Endpoint Asumido)
+    *   **Descripción**: Procesa una nueva solicitud de registro de usuario. El frontend no implementa la llamada, pero prepara los datos.
+    *   **Request Body** (`multipart/form-data`):
+        *   `nombres`: "string"
+        *   `apellidos`: "string"
+        *   `fechaNacimiento`: "string" (formato "DD/MM/AAAA")
+        *   `curp`: "string"
+        *   `colonia`: "string"
+        *   `password`: "string"
+        *   `ine`: Archivo (PDF, JPG, PNG)
+        *   `comprobante`: Archivo (PDF, JPG, PNG)
+        *   `curpDoc`: Archivo (PDF, JPG, PNG)
+    *   **Response Body**: Se espera una respuesta `201` Created o `202` Accepted con un mensaje informativo.

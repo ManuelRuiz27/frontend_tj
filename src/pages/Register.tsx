@@ -1,9 +1,10 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import InputFile from '../components/InputFile';
+import Snackbar, { SnackbarMessage } from '../components/Snackbar';
+import { isValidCurp } from '../lib/curp';
 import './Register.css';
 
-const CURP_REGEX =
-  /^[A-Z]{1}[AEIOUX]{1}[A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[HM]{1}(?:AS|BC|BS|CC|CL|CM|CS|CH|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d]{1}\d{1}$/;
 const DATE_REGEX = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 const PASSWORD_MIN_LENGTH = 8;
 const fileAccept = '.jpg,.jpeg,.png,.pdf';
@@ -47,6 +48,17 @@ const Register = () => {
     curpDoc: { file: null as File | null, error: '' },
   });
   const [statusMessage, setStatusMessage] = useState('');
+  const [snackbar, setSnackbar] = useState<SnackbarMessage | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationSnackbar = (location.state as { snackbar?: SnackbarMessage } | null)?.snackbar;
+
+  useEffect(() => {
+    if (locationSnackbar) {
+      setSnackbar(locationSnackbar);
+      navigate(location.pathname, { replace: true, state: undefined });
+    }
+  }, [locationSnackbar, location.pathname, navigate]);
 
   const validateText = (value: string) => value.trim().length >= 2;
 
@@ -66,7 +78,7 @@ const Register = () => {
     );
   };
 
-  const validateCurp = (value: string) => CURP_REGEX.test(value.toUpperCase());
+  const validateCurp = (value: string) => isValidCurp(value);
   const validatePassword = (value: string) => value.trim().length >= PASSWORD_MIN_LENGTH;
 
   const validateFile = (file: File | null) => {
@@ -169,6 +181,13 @@ const Register = () => {
         <h1 id="register-title">Registro Tarjeta Joven</h1>
         <p>Completa la informacion. Validaremos tus documentos en un maximo de 48 horas.</p>
       </header>
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          variant={snackbar.variant}
+          onClose={() => setSnackbar(null)}
+        />
+      )}
       <form className="register__form" onSubmit={handleSubmit} noValidate>
         <fieldset className="register__fieldset">
           <legend>Datos personales</legend>

@@ -27,9 +27,9 @@ const faqs: FAQ[] = [
     category: 'program',
     question: '¿Quiénes pueden solicitar la Tarjeta Joven?',
     answer:
-      'Está dirigida a jóvenes entre 14 y 28 años con documento de identidad colombiano vigente.',
+      'Está dirigida a  personas jóvenes entre 12 y 29 años con documento de identidad vigente.',
     details: [
-      'Puedes solicitarla desde cualquier municipio del país.',
+      'Puedes solicitarla en linea o tramitarla en las oficinas del INPOJUVE o en las oficinas de enlace municipal de tu municipio.',
       'Solo necesitas tu documento y un correo electrónico activo.',
     ],
     tags: ['requisitos', 'inscripción', 'documento'],
@@ -42,7 +42,6 @@ const faqs: FAQ[] = [
       'La tarjeta nace como una credencial digital para tu celular que puede integrarse con la wallet ciudadana.',
     details: [
       'Puedes mostrarla desde la aplicación incluso sin conexión.',
-      'En próximas fases se habilitará la versión física según la demanda.',
     ],
     tags: ['credencial', 'wallet'],
   },
@@ -55,7 +54,7 @@ const faqs: FAQ[] = [
     links: [
       {
         label: 'Calendario de oportunidades',
-        url: 'https://www.colombiajoven.gov.co/',
+        url: 'https://whatsapp.com/channel/0029VbB6m3M42DcWMy5Wwh2S',
       },
     ],
     tags: ['notificaciones', 'convocatorias', 'novedades'],
@@ -68,7 +67,6 @@ const faqs: FAQ[] = [
       'Busca el comercio en el catálogo o en el mapa, revisa las condiciones y presenta tu tarjeta desde el celular al momento de pagar.',
     details: [
       'Algunos descuentos aplican solo ciertos días u horarios.',
-      'Otros requieren registro previo en la plataforma del aliado.',
     ],
     tags: ['beneficios', 'catalogo', 'mapa'],
   },
@@ -84,8 +82,8 @@ const faqs: FAQ[] = [
     ],
     links: [
       {
-        label: 'Formulario para sugerir aliados',
-        url: 'https://docs.google.com/forms/d/e/1FAIpQLSeAliados/viewform',
+        label: 'Formulario para sugerir nuevos convenios',
+        url: 'https://forms.cloud.microsoft/r/bXgU9VqpkN',
       },
     ],
     tags: ['aliados', 'actualización'],
@@ -126,11 +124,11 @@ const faqs: FAQ[] = [
     links: [
       {
         label: 'Mesa de ayuda Tarjeta Joven',
-        url: 'https://soporte.colombiajoven.gov.co/',
+        url: 'https://www.instagram.com/inpojuve?igsh=MW9uc3E2eTkxcWU1bg==',
       },
       {
         label: 'Correo de soporte',
-        url: 'mailto:soporte@tarjetajoven.gov.co',
+        url: 'participacionpcs@inpojuve.onmicrosoft.com',
       },
     ],
     tags: ['soporte', 'ayuda', 'contacto'],

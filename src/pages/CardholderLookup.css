@@ -1,0 +1,103 @@
+.cardholder-lookup {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 6vw, 64px);
+}
+
+.cardholder-lookup__card {
+  width: min(520px, 100%);
+  background: linear-gradient(135deg, #1f1f1f, #1a2220);
+  color: #fff;
+  padding: clamp(24px, 5vw, 40px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  gap: 16px;
+}
+
+.cardholder-lookup__step {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cardholder-lookup__description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cardholder-lookup__form {
+  display: grid;
+  gap: 12px;
+}
+
+.cardholder-lookup__form label {
+  font-weight: 600;
+}
+
+.cardholder-lookup__form input {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1rem;
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.cardholder-lookup__form input:focus {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+.cardholder-lookup__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.cardholder-lookup__error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.9rem;
+}
+
+.cardholder-lookup__submit {
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--gradient-accent);
+  color: #fff;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.cardholder-lookup__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cardholder-lookup__submit:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(230, 0, 100, 0.28);
+}
+
+.cardholder-lookup__links {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.cardholder-lookup__links a {
+  color: var(--color-accent-400);
+  text-decoration: underline;
+  font-weight: 600;
+}

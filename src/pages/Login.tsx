@@ -3,21 +3,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import './Login.css';
 
-const CURP_REGEX =
-  /^[A-Z]{1}[AEIOUX]{1}[A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[HM]{1}(?:AS|BC|BS|CC|CL|CM|CS|CH|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d]{1}\d{1}$/;
+const USERNAME_MIN_LENGTH = 3;
 const PASSWORD_MIN_LENGTH = 8;
 
 const Login = () => {
-  const [curp, setCurp] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const { login, loginAsGuest, status: authStatus, errorMessage } = useAuth();
+  const { login, status: authStatus, errorMessage } = useAuth();
   const navigate = useNavigate();
 
-  const isCurpValid = useMemo(() => CURP_REGEX.test(curp.trim()), [curp]);
+  const isUsernameValid = useMemo(() => username.trim().length >= USERNAME_MIN_LENGTH, [username]);
   const isPasswordValid = password.length >= PASSWORD_MIN_LENGTH;
-  const canSubmit = isCurpValid && isPasswordValid && authStatus !== 'loading';
+  const canSubmit = isUsernameValid && isPasswordValid && authStatus !== 'loading';
 
   useEffect(() => {
     if (authStatus === 'authenticated') {
@@ -38,8 +37,8 @@ const Login = () => {
     setFormError('');
     setStatusMessage('');
 
-    if (!isCurpValid) {
-      setFormError('Verifica que tu CURP tenga 18 caracteres y sea valida.');
+    if (!isUsernameValid) {
+      setFormError('Ingresa tu usuario tal como fue asignado.');
       return;
     }
 
@@ -49,9 +48,9 @@ const Login = () => {
     }
 
     try {
-      const normalizedCurp = curp.trim().toUpperCase();
+      const normalizedUsername = username.trim();
       await login({
-        curp: normalizedCurp,
+        username: normalizedUsername,
         password,
       });
       setStatusMessage('Inicio de sesion exitoso. Cargando tu informacion...');
@@ -61,39 +60,42 @@ const Login = () => {
     }
   };
 
-  const handleGuestAccess = () => {
-    setFormError('');
-    setStatusMessage('Ingresaste en modo de pruebas.');
-    loginAsGuest();
+  const handlePhysicalCardClick = () => {
+    navigate('/registro/tarjeta-fisica');
   };
 
   return (
     <main className="login" aria-labelledby="login-title">
       <header className="login__header">
-        <h1 id="login-title">Inicia sesion con tu CURP</h1>
-        <p>Ingresa tu CURP y contrasena para acceder a tu cuenta.</p>
+        <div className="login__logo" aria-hidden="true">
+          <img src="/icons/logo.svg" alt="Tarjeta Joven" />
+        </div>
+        <h1 id="login-title" className="visually-hidden">
+          Inicia sesion con tu usuario
+        </h1>
       </header>
 
       <section className="login__card" aria-labelledby="login-form">
         <h2 id="login-form">Acceso seguro</h2>
         <form className="login__form" onSubmit={handleSubmit} noValidate>
-          <div className={`login__field ${curp && !isCurpValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="curp">CURP</label>
+          <div className={`login__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
+            <label htmlFor="username">Usuario</label>
             <input
-              id="curp"
+              id="username"
               type="text"
-              value={curp}
+              value={username}
               onChange={(event) => {
-                const normalized = event.target.value.replace(/\s+/g, '').toUpperCase();
-                setCurp(normalized);
+                setUsername(event.target.value);
                 setStatusMessage('');
               }}
-              maxLength={18}
-              placeholder="PEPJ800101HDFLLL01"
+              minLength={USERNAME_MIN_LENGTH}
+              placeholder="usuario.tj"
               autoComplete="username"
               required
             />
-            {!isCurpValid && curp && <p className="login__error">Revisa tu CURP. Debe coincidir con el formato oficial.</p>}
+            {!isUsernameValid && username && (
+              <p className="login__error">Tu usuario debe tener al menos {USERNAME_MIN_LENGTH} caracteres.</p>
+            )}
           </div>
 
           <div className={`login__field ${password && !isPasswordValid ? 'is-invalid' : ''}`}>
@@ -119,13 +121,8 @@ const Login = () => {
           <button type="submit" className="login__submit" disabled={!canSubmit}>
             {authStatus === 'loading' ? 'Verificando...' : 'Iniciar sesion'}
           </button>
-          <button
-            type="button"
-            className="login__send"
-            onClick={handleGuestAccess}
-            disabled={authStatus === 'loading'}
-          >
-            Acceder sin credenciales
+          <button type="button" className="login__secondary" onClick={handlePhysicalCardClick}>
+            Ya tengo tarjeta fisica
           </button>
           <p className="login__status" role="status" aria-live="polite">
             {formError || statusMessage}

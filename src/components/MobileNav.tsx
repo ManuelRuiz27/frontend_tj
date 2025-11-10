@@ -3,8 +3,9 @@ import './MobileNav.css';
 
 const items = [
   { to: '/perfil', label: 'Perfil' },
-  { to: '/catalog', label: 'Catálogo' },
+  { to: '/catalog', label: 'Catalogo' },
   { to: '/map', label: 'Mapa' },
+  { to: '/settings', label: 'Settings' },
 ];
 
 const MobileNav = () => {
@@ -16,7 +17,7 @@ const MobileNav = () => {
   }
 
   return (
-    <nav className="mobile-nav" aria-label="Navegación principal móvil">
+    <nav className="mobile-nav" aria-label="Navegacion principal movil">
       <ul className="mobile-nav__list">
         {items.map((item) => (
           <li key={item.to} className="mobile-nav__item">

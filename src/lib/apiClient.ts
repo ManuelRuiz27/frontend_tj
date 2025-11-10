@@ -111,3 +111,6 @@ export const apiFetch = async <TResponse = unknown>(
 
   return payload as TResponse;
 };
+
+export const isApiError = (error: unknown): error is ApiError =>
+  typeof error === 'object' && error !== null && 'status' in error && typeof (error as ApiError).status === 'number';

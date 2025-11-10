@@ -1,0 +1,23 @@
+<svg width="1200" height="450" viewBox="0 0 1200 450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tarjeta Joven banner">
+  <defs>
+    <linearGradient id="bannerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d7a5f" />
+      <stop offset="55%" stop-color="#51b361" />
+      <stop offset="100%" stop-color="#e60064" />
+    </linearGradient>
+    <linearGradient id="glowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.65)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="450" fill="url(#bannerGradient)" rx="36" />
+  <circle cx="180" cy="120" r="140" fill="rgba(255,255,255,0.08)" />
+  <circle cx="1100" cy="360" r="140" fill="rgba(255,255,255,0.08)" />
+  <path d="M0 260 Q 300 200 600 260 T 1200 260 V 450 H 0 Z" fill="rgba(255,255,255,0.08)" />
+  <path d="M0 300 Q 300 360 600 300 T 1200 300 V 450 H 0 Z" fill="rgba(255,255,255,0.12)" />
+  <rect x="80" y="60" width="1040" height="120" fill="url(#glowGradient)" rx="32" opacity="0.45" />
+  <rect x="80" y="270" width="1040" height="80" fill="rgba(255,255,255,0.12)" rx="24" />
+  <text x="100" y="325" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700" opacity="0.9">
+    Tarjeta Joven
+  </text>
+</svg>
