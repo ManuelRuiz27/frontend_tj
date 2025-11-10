@@ -1,9 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
+import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Login.css';
 
-const USERNAME_MIN_LENGTH = 3;
 const PASSWORD_MIN_LENGTH = 8;
 
 const Login = () => {
@@ -14,8 +14,8 @@ const Login = () => {
   const { login, status: authStatus, errorMessage } = useAuth();
   const navigate = useNavigate();
 
-  const isUsernameValid = useMemo(() => username.trim().length >= USERNAME_MIN_LENGTH, [username]);
-  const isPasswordValid = password.length >= PASSWORD_MIN_LENGTH;
+  const isUsernameValid = useMemo(() => isValidEmail(username), [username]);
+  const isPasswordValid = useMemo(() => isSecurePassword(password, PASSWORD_MIN_LENGTH), [password]);
   const canSubmit = isUsernameValid && isPasswordValid && authStatus !== 'loading';
 
   useEffect(() => {
@@ -38,17 +38,19 @@ const Login = () => {
     setStatusMessage('');
 
     if (!isUsernameValid) {
-      setFormError('Ingresa tu usuario tal como fue asignado.');
+      setFormError('Ingresa un correo electronico valido.');
       return;
     }
 
     if (!isPasswordValid) {
-      setFormError(`Tu contrasena debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres.`);
+      setFormError(
+        'Tu contrasena debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.',
+      );
       return;
     }
 
     try {
-      const normalizedUsername = username.trim();
+      const normalizedUsername = username.trim().toLowerCase();
       await login({
         username: normalizedUsername,
         password,
@@ -79,22 +81,22 @@ const Login = () => {
         <h2 id="login-form">Acceso seguro</h2>
         <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div className={`login__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Usuario</label>
+            <label htmlFor="username">Correo electronico</label>
             <input
               id="username"
-              type="text"
+              type="email"
               value={username}
               onChange={(event) => {
                 setUsername(event.target.value);
                 setStatusMessage('');
               }}
-              minLength={USERNAME_MIN_LENGTH}
-              placeholder="usuario.tj"
+              inputMode="email"
+              placeholder="correo@dominio.com"
               autoComplete="username"
               required
             />
             {!isUsernameValid && username && (
-              <p className="login__error">Tu usuario debe tener al menos {USERNAME_MIN_LENGTH} caracteres.</p>
+              <p className="login__error">Debes capturar un correo electronico valido.</p>
             )}
           </div>
 
@@ -114,7 +116,9 @@ const Login = () => {
               required
             />
             {!isPasswordValid && password && (
-              <p className="login__error">Tu contrasena debe tener al menos {PASSWORD_MIN_LENGTH} caracteres.</p>
+              <p className="login__error">
+                Debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.
+              </p>
             )}
           </div>
 

@@ -2,11 +2,16 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import InputFile from '../components/InputFile';
 import Snackbar, { SnackbarMessage } from '../components/Snackbar';
-import { isValidCurp } from '../lib/curp';
+import { cardholderApi } from '../lib/api/cardholders';
+import { isApiError } from '../lib/apiClient';
+import { isValidCurp, normalizeCurp } from '../lib/curp';
+import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Register.css';
 
 const DATE_REGEX = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 const PASSWORD_MIN_LENGTH = 8;
+const POSTAL_CODE_REGEX = /^\d{5}$/;
+const HOUSE_NUMBER_REGEX = /^[0-9]{1,5}[A-Z0-9\-]{0,4}$/;
 const fileAccept = '.jpg,.jpeg,.png,.pdf';
 
 type RegisterFormState = {
@@ -14,16 +19,41 @@ type RegisterFormState = {
   apellidos: string;
   fechaNacimiento: string;
   curp: string;
+  username: string;
+  calle: string;
+  numero: string;
+  cp: string;
   colonia: string;
   password: string;
   aceptaTerminos: boolean;
 };
+
+type FileFieldState = {
+  file: File | null;
+  error: string;
+};
+
+type RegisterFilesState = {
+  ine: FileFieldState;
+  comprobante: FileFieldState;
+  curpDoc: FileFieldState;
+};
+
+const createInitialFilesState = (): RegisterFilesState => ({
+  ine: { file: null, error: '' },
+  comprobante: { file: null, error: '' },
+  curpDoc: { file: null, error: '' },
+});
 
 const initialFormState: RegisterFormState = {
   nombres: '',
   apellidos: '',
   fechaNacimiento: '',
   curp: '',
+  username: '',
+  calle: '',
+  numero: '',
+  cp: '',
   colonia: '',
   password: '',
   aceptaTerminos: false,
@@ -34,6 +64,10 @@ const initialTouched: Record<keyof RegisterFormState, boolean> = {
   apellidos: false,
   fechaNacimiento: false,
   curp: false,
+  username: false,
+  calle: false,
+  numero: false,
+  cp: false,
   colonia: false,
   password: false,
   aceptaTerminos: false,
@@ -42,13 +76,11 @@ const initialTouched: Record<keyof RegisterFormState, boolean> = {
 const Register = () => {
   const [formData, setFormData] = useState<RegisterFormState>(initialFormState);
   const [touched, setTouched] = useState(initialTouched);
-  const [files, setFiles] = useState({
-    ine: { file: null as File | null, error: '' },
-    comprobante: { file: null as File | null, error: '' },
-    curpDoc: { file: null as File | null, error: '' },
-  });
+  const [files, setFiles] = useState<RegisterFilesState>(() => createInitialFilesState());
   const [statusMessage, setStatusMessage] = useState('');
   const [snackbar, setSnackbar] = useState<SnackbarMessage | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fileResetKey, setFileResetKey] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const locationSnackbar = (location.state as { snackbar?: SnackbarMessage } | null)?.snackbar;
@@ -79,7 +111,20 @@ const Register = () => {
   };
 
   const validateCurp = (value: string) => isValidCurp(value);
-  const validatePassword = (value: string) => value.trim().length >= PASSWORD_MIN_LENGTH;
+  const validateUsername = (value: string) => isValidEmail(value);
+  const validatePassword = (value: string) => isSecurePassword(value, PASSWORD_MIN_LENGTH);
+  const validateStreetNumber = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) {
+      return false;
+    }
+    if (normalized.toUpperCase() === 'S/N') {
+      return true;
+    }
+    const compact = normalized.replace(/\s+/g, '').toUpperCase();
+    return HOUSE_NUMBER_REGEX.test(compact);
+  };
+  const validatePostalCode = (value: string) => POSTAL_CODE_REGEX.test(value.trim());
 
   const validateFile = (file: File | null) => {
     if (!file) {
@@ -106,10 +151,18 @@ const Register = () => {
         ? ''
         : 'Usa el formato DD/MM/AAAA y verifica que seas mayor de 15 anos.',
       curp: validateCurp(formData.curp) ? '' : 'Revisa tu CURP. Debe coincidir con el formato oficial.',
+      username: validateUsername(formData.username)
+        ? ''
+        : 'Ingresa un correo electronico valido.',
+      calle: validateText(formData.calle) ? '' : 'Ingresa la calle donde resides.',
+      numero: validateStreetNumber(formData.numero)
+        ? ''
+        : 'Ingresa un numero exterior valido (usa S/N si aplica).',
+      cp: validatePostalCode(formData.cp) ? '' : 'El codigo postal debe tener 5 digitos.',
       colonia: validateText(formData.colonia) ? '' : 'Ingresa la colonia donde resides.',
       password: validatePassword(formData.password)
         ? ''
-        : `Tu contrasena debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres.`,
+        : 'Tu contrasena debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.',
       aceptaTerminos: formData.aceptaTerminos ? '' : 'Debes aceptar los terminos y politicas.',
     }),
     [formData],
@@ -130,7 +183,7 @@ const Register = () => {
     }));
   };
 
-  const handleFileChange = (key: keyof typeof files, file: File | null) => {
+  const handleFileChange = (key: keyof RegisterFilesState, file: File | null) => {
     setStatusMessage('');
     setFiles((prev) => {
       const errorMessage = file ? validateFile(file) : 'Este archivo es obligatorio.';
@@ -141,13 +194,17 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTouched({
       nombres: true,
       apellidos: true,
       fechaNacimiento: true,
       curp: true,
+      username: true,
+      calle: true,
+      numero: true,
+      cp: true,
       colonia: true,
       password: true,
       aceptaTerminos: true,
@@ -168,10 +225,60 @@ const Register = () => {
       curpDoc: { file: fileErrors.curpDoc ? null : prev.curpDoc.file, error: fileErrors.curpDoc },
     }));
 
-    if (!hasErrors) {
-      setStatusMessage('Registro enviado. Te avisaremos por correo cuando sea validado.');
-    } else {
+    if (hasErrors) {
       setStatusMessage('Por favor corrige los campos resaltados.');
+      return;
+    }
+
+    const ineFile = files.ine.file;
+    const comprobanteFile = files.comprobante.file;
+    const curpDocFile = files.curpDoc.file;
+
+    if (!ineFile || !comprobanteFile || !curpDocFile) {
+      setStatusMessage('Por favor adjunta los documentos requeridos.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSnackbar(null);
+    setStatusMessage('Enviando registro...');
+
+    try {
+      await cardholderApi.submitRegistration({
+        nombres: formData.nombres.trim(),
+        apellidos: formData.apellidos.trim(),
+        fechaNacimiento: formData.fechaNacimiento.trim(),
+        curp: normalizeCurp(formData.curp),
+        username: formData.username.trim().toLowerCase(),
+        calle: formData.calle.trim(),
+        numero: formData.numero.trim(),
+        cp: formData.cp.trim(),
+        colonia: formData.colonia.trim(),
+        password: formData.password,
+        aceptaTerminos: formData.aceptaTerminos,
+        ine: ineFile,
+        comprobante: comprobanteFile,
+        curpDoc: curpDocFile,
+      });
+
+      setStatusMessage('Registro enviado. Te avisaremos por correo cuando sea validado.');
+      setSnackbar({
+        message: 'Recibimos tu solicitud. Te contactaremos al validar tu documentacion.',
+        variant: 'success',
+      });
+      setFormData(initialFormState);
+      setTouched(initialTouched);
+      setFiles(createInitialFilesState());
+      setFileResetKey((value) => value + 1);
+    } catch (error) {
+      const message =
+        isApiError(error) && error.message
+          ? error.message
+          : 'No pudimos enviar tu registro. Intenta nuevamente.';
+      setStatusMessage(message);
+      setSnackbar({ message, variant: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -252,6 +359,53 @@ const Register = () => {
               {touched.curp && errors.curp && <p className="register__error">{errors.curp}</p>}
             </div>
           </div>
+          <div className="register__grid">
+            <div className={`register__field ${touched.calle && errors.calle ? 'is-invalid' : ''}`}>
+              <label htmlFor="calle">Calle</label>
+              <input
+                id="calle"
+                name="calle"
+                type="text"
+                value={formData.calle}
+                onChange={(event) => handleInputChange('calle', event.target.value)}
+                onBlur={() => handleBlur('calle')}
+                autoComplete="address-line1"
+                required
+              />
+              {touched.calle && errors.calle && <p className="register__error">{errors.calle}</p>}
+            </div>
+            <div className={`register__field ${touched.numero && errors.numero ? 'is-invalid' : ''}`}>
+              <label htmlFor="numero">Numero exterior</label>
+              <input
+                id="numero"
+                name="numero"
+                type="text"
+                value={formData.numero}
+                onChange={(event) => handleInputChange('numero', event.target.value)}
+                onBlur={() => handleBlur('numero')}
+                placeholder="123 o S/N"
+                autoComplete="address-line2"
+                required
+              />
+              {touched.numero && errors.numero && <p className="register__error">{errors.numero}</p>}
+            </div>
+            <div className={`register__field ${touched.cp && errors.cp ? 'is-invalid' : ''}`}>
+              <label htmlFor="cp">Codigo postal (CP)</label>
+              <input
+                id="cp"
+                name="cp"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                value={formData.cp}
+                onChange={(event) => handleInputChange('cp', event.target.value)}
+                onBlur={() => handleBlur('cp')}
+                autoComplete="postal-code"
+                required
+              />
+              {touched.cp && errors.cp && <p className="register__error">{errors.cp}</p>}
+            </div>
+          </div>
           <div className={`register__field ${touched.colonia && errors.colonia ? 'is-invalid' : ''}`}>
             <label htmlFor="colonia">Colonia</label>
             <input
@@ -261,9 +415,28 @@ const Register = () => {
               value={formData.colonia}
               onChange={(event) => handleInputChange('colonia', event.target.value)}
               onBlur={() => handleBlur('colonia')}
+              autoComplete="address-level3"
               required
             />
             {touched.colonia && errors.colonia && <p className="register__error">{errors.colonia}</p>}
+          </div>
+          <div className={`register__field ${touched.username && errors.username ? 'is-invalid' : ''}`}>
+            <label htmlFor="username">Correo electronico</label>
+            <input
+              id="username"
+              name="username"
+              type="email"
+              value={formData.username}
+              onChange={(event) => handleInputChange('username', event.target.value)}
+              onBlur={() => handleBlur('username')}
+              placeholder="correo@dominio.com"
+              inputMode="email"
+              autoComplete="username"
+              required
+            />
+            {touched.username && errors.username && (
+              <p className="register__error">{errors.username}</p>
+            )}
           </div>
           <div className={`register__field ${touched.password && errors.password ? 'is-invalid' : ''}`}>
             <label htmlFor="password">Contrasena de acceso</label>
@@ -286,6 +459,7 @@ const Register = () => {
         <fieldset className="register__fieldset">
           <legend>Documentos</legend>
           <InputFile
+            key={`ine-${fileResetKey}`}
             label="Identificacion oficial (INE)"
             accept={fileAccept}
             required
@@ -294,6 +468,7 @@ const Register = () => {
             onFileSelect={(file) => handleFileChange('ine', file)}
           />
           <InputFile
+            key={`comprobante-${fileResetKey}`}
             label="Comprobante de domicilio"
             accept={fileAccept}
             required
@@ -302,6 +477,7 @@ const Register = () => {
             onFileSelect={(file) => handleFileChange('comprobante', file)}
           />
           <InputFile
+            key={`curpDoc-${fileResetKey}`}
             label="CURP digital"
             accept={fileAccept}
             required
@@ -331,8 +507,8 @@ const Register = () => {
         )}
 
         <div className="register__actions">
-          <button type="submit" className="register__submit">
-            Enviar registro
+          <button type="submit" className="register__submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Enviando registro...' : 'Enviar registro'}
           </button>
           <p className="register__status" role="status" aria-live="polite">
             {statusMessage}

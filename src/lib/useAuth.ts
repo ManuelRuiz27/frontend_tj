@@ -64,7 +64,7 @@ export const useAuth = () => {
 
       try {
         const normalizedCredentials: LoginRequest = {
-          username: credentials.username.trim(),
+          username: credentials.username.trim().toLowerCase(),
           password: credentials.password,
         };
         const authTokens = await authApi.login(normalizedCredentials);

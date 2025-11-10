@@ -4,9 +4,9 @@ import Snackbar, { SnackbarMessage } from '../components/Snackbar';
 import { cardholderApi, CardholderLookupResponse } from '../lib/api/cardholders';
 import { normalizeCurp } from '../lib/curp';
 import { isApiError } from '../lib/apiClient';
+import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './CardholderAccountSetup.css';
 
-const USERNAME_MIN_LENGTH = 3;
 const PASSWORD_MIN_LENGTH = 8;
 
 type LocationState = {
@@ -31,8 +31,8 @@ const CardholderAccountSetup = () => {
     }
   }, [lookup, navigate]);
 
-  const isUsernameValid = useMemo(() => username.trim().length >= USERNAME_MIN_LENGTH, [username]);
-  const isPasswordValid = useMemo(() => password.length >= PASSWORD_MIN_LENGTH, [password]);
+  const isUsernameValid = useMemo(() => isValidEmail(username), [username]);
+  const isPasswordValid = useMemo(() => isSecurePassword(password, PASSWORD_MIN_LENGTH), [password]);
   const isConfirmValid = useMemo(() => confirmPassword === password && confirmPassword.length > 0, [confirmPassword, password]);
   const canSubmit = isUsernameValid && isPasswordValid && isConfirmValid && !isSubmitting && !isCompleted;
 
@@ -54,7 +54,7 @@ const CardholderAccountSetup = () => {
     try {
       await cardholderApi.createAccount({
         curp: normalizeCurp(lookup.curp),
-        username: username.trim(),
+        username: username.trim().toLowerCase(),
         password,
       });
       setIsCompleted(true);
@@ -101,19 +101,19 @@ const CardholderAccountSetup = () => {
 
         <form className="cardholder-account__form" onSubmit={handleSubmit} noValidate>
           <div className={`cardholder-account__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Usuario</label>
+            <label htmlFor="username">Correo electronico</label>
             <input
               id="username"
-              type="text"
+              type="email"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              minLength={USERNAME_MIN_LENGTH}
-              placeholder="usuario.tj"
+              placeholder="correo@dominio.com"
+              inputMode="email"
               autoComplete="username"
               disabled={isCompleted}
               required
             />
-            <p className="cardholder-account__hint">Debe tener al menos {USERNAME_MIN_LENGTH} caracteres.</p>
+            <p className="cardholder-account__hint">Debe ser un correo electronico valido.</p>
           </div>
 
           <div className={`cardholder-account__field ${password && !isPasswordValid ? 'is-invalid' : ''}`}>
@@ -129,7 +129,9 @@ const CardholderAccountSetup = () => {
               disabled={isCompleted}
               required
             />
-            <p className="cardholder-account__hint">Minimo {PASSWORD_MIN_LENGTH} caracteres.</p>
+            <p className="cardholder-account__hint">
+              Debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.
+            </p>
           </div>
 
           <div className={`cardholder-account__field ${confirmPassword && !isConfirmValid ? 'is-invalid' : ''}`}>
