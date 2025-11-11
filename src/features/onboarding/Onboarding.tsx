@@ -9,7 +9,7 @@ const steps = [
     description:
       'Tu identidad digital para acceder a servicios públicos y privados, con seguridad y validación oficial en todo momento.',
     details: [
-      'Digital y gratuita, diseñada para jóvenes de 14 a 28 años.',
+      'Digital y gratuita, diseñada para jóvenes de 12 a 29 años que residen en el estado de San Luis Potosí.',
       'Funciona como credencial interoperable con la wallet ciudadana.',
     ],
   },
@@ -17,8 +17,7 @@ const steps = [
     title: 'Beneficios principales',
     description: 'Suma experiencias, descuentos y oportunidades pensadas para tu proyecto de vida.',
     details: [
-      'Promociones exclusivas en comercios aliados y eventos culturales.',
-      'Acceso prioritario a convocatorias de becas, formación y empleo.',
+      'Promociones exclusivas en comercios aliados y difusion de eventos publicos.',
       'Integración con movilidad, salud y programas sociales.',
     ],
   },
