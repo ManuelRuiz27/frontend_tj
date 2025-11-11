@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import './MobileNav.css';
+import { useAuth } from '../lib/useAuth';
 
 const items = [
   { to: '/perfil', label: 'Perfil' },
@@ -10,9 +11,10 @@ const items = [
 
 const MobileNav = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const hiddenRoutes = ['/login', '/registro'];
 
-  if (hiddenRoutes.includes(location.pathname)) {
+  if (!isAuthenticated || hiddenRoutes.includes(location.pathname)) {
     return null;
   }
 

@@ -1,14 +1,16 @@
 .mobile-nav {
   position: fixed;
-  bottom: clamp(12px, 3vw, 20px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(95%, 420px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: 100%;
   background: rgb(0, 0, 0);
-  border: 1px solid rgba(118, 184, 42, 0.25);
-  border-radius: 20px;
-  box-shadow: 0 18px 36px rgba(18, 25, 20, 0.18);
-  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid rgba(118, 184, 42, 0.25);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -12px 24px rgba(18, 25, 20, 0.3);
+  padding: 12px clamp(18px, 6vw, 32px) calc(14px + env(safe-area-inset-bottom));
   backdrop-filter: blur(16px);
   z-index: 999;
 }

@@ -84,6 +84,12 @@ body {
   line-height: 1.5;
 }
 
+@media (max-width: 899px) {
+  body {
+    padding-bottom: calc(clamp(88px, 18vw, 128px) + env(safe-area-inset-bottom));
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
