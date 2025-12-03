@@ -44,7 +44,7 @@ const CardholderAccountSetup = () => {
     event.preventDefault();
 
     if (!isUsernameValid || !isPasswordValid || !isConfirmValid) {
-      setSnackbar({ message: 'Revisa los datos capturados antes de continuar.', variant: 'error' });
+      setSnackbar({ message: 'Revisa la información capturada antes de continuar.', variant: 'error' });
       return;
     }
 
@@ -59,16 +59,16 @@ const CardholderAccountSetup = () => {
       });
       setIsCompleted(true);
       setSnackbar({
-        message: 'Tu cuenta fue creada. Ahora puedes iniciar sesion con tu nuevo usuario.',
+        message: 'Listo. Tu cuenta ya está activa. Inicia sesión con tu nuevo usuario.',
         variant: 'success',
       });
     } catch (error) {
       const message =
         isApiError(error) && error.status === 409
-          ? 'Esta tarjeta ya cuenta con un usuario asignado. Intenta recuperar tu acceso desde el login.'
+          ? 'Esta tarjeta ya tiene usuario asignado. Recupera tu acceso desde el login.'
           : isApiError(error) && error.message
             ? error.message
-            : 'No pudimos crear tu cuenta. Intenta nuevamente.';
+            : 'No pudimos crear tu cuenta. Intenta de nuevo.';
 
       setSnackbar({ message, variant: 'error' });
     } finally {
@@ -82,7 +82,7 @@ const CardholderAccountSetup = () => {
         <p className="cardholder-account__step">Paso 2 de 2</p>
         <h1 id="cardholder-account-title">Crea tu cuenta digital</h1>
         <p className="cardholder-account__description">
-          Confirma tus datos y define un usuario y contrasena para acceder a Tarjeta Joven.
+          Confirma tus datos y define tu usuario y contraseña para entrar a Tarjeta Joven.
         </p>
 
         <div className="cardholder-account__summary" aria-live="polite">
@@ -101,7 +101,7 @@ const CardholderAccountSetup = () => {
 
         <form className="cardholder-account__form" onSubmit={handleSubmit} noValidate>
           <div className={`cardholder-account__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Correo electronico</label>
+            <label htmlFor="username">Correo electrónico</label>
             <input
               id="username"
               type="email"
@@ -113,11 +113,11 @@ const CardholderAccountSetup = () => {
               disabled={isCompleted}
               required
             />
-            <p className="cardholder-account__hint">Debe ser un correo electronico valido.</p>
+            <p className="cardholder-account__hint">Usa un correo activo; te avisaremos por ahí.</p>
           </div>
 
           <div className={`cardholder-account__field ${password && !isPasswordValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="password">Contrasena</label>
+            <label htmlFor="password">Contraseña</label>
             <input
               id="password"
               type="password"
@@ -130,12 +130,12 @@ const CardholderAccountSetup = () => {
               required
             />
             <p className="cardholder-account__hint">
-              Debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.
+              Mínimo 8 caracteres con mayúsculas, minúsculas y números.
             </p>
           </div>
 
           <div className={`cardholder-account__field ${confirmPassword && !isConfirmValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="confirmPassword">Confirma tu contrasena</label>
+            <label htmlFor="confirmPassword">Confirma tu contraseña</label>
             <input
               id="confirmPassword"
               type="password"
@@ -146,7 +146,7 @@ const CardholderAccountSetup = () => {
               disabled={isCompleted}
               required
             />
-            <p className="cardholder-account__hint">Debe coincidir con la contrasena anterior.</p>
+            <p className="cardholder-account__hint">Debe coincidir con la contraseña anterior.</p>
           </div>
 
           <button type="submit" className="cardholder-account__submit" disabled={!canSubmit}>

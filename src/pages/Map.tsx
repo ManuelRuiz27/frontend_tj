@@ -12,8 +12,8 @@ import './Map.css';
 const MAPS_URL = env.mapsUrl;
 
 const MapPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [selectedMunicipality, setSelectedMunicipality] = useState<string | undefined>();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedMunicipalities, setSelectedMunicipalities] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
   const [benefits, setBenefits] = useState<Benefit[]>([]);
@@ -30,11 +30,11 @@ const MapPage = () => {
 
   useEffect(() => {
     fetchCatalog({
-      categoria: selectedCategory,
-      municipio: selectedMunicipality,
+      categoria: selectedCategories.length ? selectedCategories.join(',') : undefined,
+      municipio: selectedMunicipalities.length ? selectedMunicipalities.join(',') : undefined,
       q: appliedQuery || undefined,
     });
-  }, [selectedCategory, selectedMunicipality, appliedQuery, fetchCatalog]);
+  }, [selectedCategories, selectedMunicipalities, appliedQuery, fetchCatalog]);
 
   useEffect(() => {
     if (!data) {
@@ -98,23 +98,23 @@ const MapPage = () => {
     }
   }, [selectedBenefit?.name]);
 
-  const handleCategoryChange = (category?: string) => {
-    setSelectedCategory(category);
+  const handleCategoryChange = (categoriesValue: string[]) => {
+    setSelectedCategories(categoriesValue);
     setSelectedBenefitId(undefined);
     track('filter', {
       origin: 'map',
       type: 'category',
-      value: category ?? 'all',
+      value: categoriesValue.length ? categoriesValue.join(',') : 'all',
     });
   };
 
-  const handleMunicipalityChange = (municipality?: string) => {
-    setSelectedMunicipality(municipality);
+  const handleMunicipalityChange = (municipalitiesValue: string[]) => {
+    setSelectedMunicipalities(municipalitiesValue);
     setSelectedBenefitId(undefined);
     track('filter', {
       origin: 'map',
       type: 'municipality',
-      value: municipality ?? 'all',
+      value: municipalitiesValue.length ? municipalitiesValue.join(',') : 'all',
     });
   };
 
@@ -125,15 +125,15 @@ const MapPage = () => {
       track('search', {
         origin: 'map',
         query: trimmed,
-        category: selectedCategory,
-        municipality: selectedMunicipality,
+        category: selectedCategories.join(',') || undefined,
+        municipality: selectedMunicipalities.join(',') || undefined,
       });
     }
   };
 
   const handleReset = () => {
-    setSelectedCategory(undefined);
-    setSelectedMunicipality(undefined);
+    setSelectedCategories([]);
+    setSelectedMunicipalities([]);
     setQuery('');
     setAppliedQuery('');
     setSelectedBenefitId(undefined);
@@ -164,12 +164,12 @@ const MapPage = () => {
       <FilterChips
         categories={categories}
         municipalities={municipalities}
-        selectedCategory={selectedCategory}
-        selectedMunicipality={selectedMunicipality}
+        selectedCategories={selectedCategories}
+        selectedMunicipalities={selectedMunicipalities}
         query={query}
         onQueryChange={setQuery}
-        onCategoryChange={handleCategoryChange}
-        onMunicipalityChange={handleMunicipalityChange}
+        onCategoriesChange={handleCategoryChange}
+        onMunicipalitiesChange={handleMunicipalityChange}
         onSearch={handleSearch}
         onReset={handleReset}
       />

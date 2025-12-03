@@ -17,6 +17,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  color: var(--color-heading);
 }
 
 .map-page__subtitle {
@@ -51,8 +52,12 @@
 
 .map-page__viewer {
   position: relative;
-  background: linear-gradient(135deg, rgba(118, 184, 42, 0.15), rgba(230, 0, 100, 0.12));
-  border: 1px solid rgba(118, 184, 42, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-secondary-bright-rgb), 0.18),
+    rgba(var(--color-accent-500-rgb), 0.15)
+  );
+  border: 1px solid rgba(var(--color-secondary-bright-rgb), 0.35);
   border-radius: var(--radius-md);
   overflow: hidden;
   min-height: 320px;
@@ -128,6 +133,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
+  color: var(--color-heading);
 }
 
 .map-card__meta {
@@ -141,7 +147,7 @@
   background-color: var(--color-neutral-100);
   border-radius: 999px;
   padding: 6px 12px;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-neutral-700);
 }
@@ -155,7 +161,7 @@
 .map-card__schedule {
   margin: 0;
   color: var(--color-neutral-600);
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .map-card__actions {

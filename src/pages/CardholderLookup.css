@@ -1,4 +1,4 @@
-.cardholder-lookup {
+﻿.cardholder-lookup {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -8,26 +8,44 @@
 
 .cardholder-lookup__card {
   width: min(520px, 100%);
-  background: linear-gradient(135deg, #1f1f1f, #1a2220);
+  position: relative;
+  padding: clamp(28px, 5vw, 48px);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: linear-gradient(140deg, rgba(5, 90, 28, 0.95), rgba(118, 184, 42, 0.9));
   color: #fff;
-  padding: clamp(24px, 5vw, 40px);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 22px 34px rgba(5, 90, 28, 0.32);
   display: grid;
-  gap: 16px;
+  gap: 20px;
+  --heading-color: #fff;
+}
+
+.cardholder-lookup__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.9) 0, transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.8) 0, transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.6) 0, transparent 55%);
+}
+
+.cardholder-lookup__card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .cardholder-lookup__step {
   margin: 0;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .cardholder-lookup__description {
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .cardholder-lookup__form {
@@ -57,25 +75,26 @@
 
 .cardholder-lookup__hint {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: rgba(255, 255, 255, 0.75);
 }
 
 .cardholder-lookup__error {
   margin: 0;
   color: var(--color-error);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .cardholder-lookup__submit {
   padding: 14px 20px;
   border-radius: 999px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.7);
   font-weight: 700;
   cursor: pointer;
-  background: var(--gradient-accent);
-  color: #fff;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  background: var(--color-primary-500);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(5, 90, 28, 0.28);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
 }
 
 .cardholder-lookup__submit:disabled {
@@ -85,7 +104,8 @@
 
 .cardholder-lookup__submit:not(:disabled):hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 24px rgba(230, 0, 100, 0.28);
+  background: var(--color-primary-600);
+  box-shadow: 0 14px 32px rgba(5, 90, 28, 0.32);
 }
 
 .cardholder-lookup__links {
@@ -93,11 +113,12 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .cardholder-lookup__links a {
-  color: var(--color-accent-400);
+  color: var(--color-accent-200);
   text-decoration: underline;
   font-weight: 600;
 }
+

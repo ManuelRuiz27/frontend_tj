@@ -26,31 +26,7 @@ export interface CardholderRegistrationPayload {
   colonia: string;
   password: string;
   aceptaTerminos: boolean;
-  ine: File;
-  comprobante: File;
-  curpDoc: File;
 }
-
-const buildRegistrationFormData = (payload: CardholderRegistrationPayload) => {
-  const formData = new FormData();
-
-  formData.append('nombres', payload.nombres);
-  formData.append('apellidos', payload.apellidos);
-  formData.append('fechaNacimiento', payload.fechaNacimiento);
-  formData.append('curp', payload.curp);
-  formData.append('username', payload.username);
-  formData.append('calle', payload.calle);
-  formData.append('numero', payload.numero);
-  formData.append('cp', payload.cp);
-  formData.append('colonia', payload.colonia);
-  formData.append('password', payload.password);
-  formData.append('aceptaTerminos', payload.aceptaTerminos ? 'true' : 'false');
-  formData.append('ine', payload.ine);
-  formData.append('comprobante', payload.comprobante);
-  formData.append('curpDoc', payload.curpDoc);
-
-  return formData;
-};
 
 export const cardholderApi = {
   lookupCurp: (curp: string) =>
@@ -66,6 +42,6 @@ export const cardholderApi = {
   submitRegistration: (payload: CardholderRegistrationPayload) =>
     apiFetch<void>('/cardholders', {
       method: 'POST',
-      body: buildRegistrationFormData(payload),
+      body: JSON.stringify(payload),
     }),
 };

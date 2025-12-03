@@ -6,6 +6,12 @@ const apiBaseUrl =
     ? rawApiBaseUrl.trim()
     : DEFAULT_API_BASE_URL;
 
+const rawIdentityValidationUrl = import.meta.env.VITE_ID_VALIDATION_URL;
+const identityValidationUrl =
+  typeof rawIdentityValidationUrl === 'string' && rawIdentityValidationUrl.trim().length > 0
+    ? rawIdentityValidationUrl.trim()
+    : '';
+
 const mode = import.meta.env.MODE;
 const rawVersion =
   import.meta.env.VITE_APP_VERSION ?? import.meta.env.VITE_COMMIT_SHA ?? undefined;
@@ -23,6 +29,7 @@ export const env = {
   isDev: import.meta.env.DEV,
   apiBaseUrl,
   defaultApiBaseUrl: DEFAULT_API_BASE_URL,
+  identityValidationUrl,
   analyticsUrl: import.meta.env.VITE_ANALYTICS_URL ?? '',
   mapsUrl: import.meta.env.VITE_MAPS_URL ?? '',
   sentryDsn: import.meta.env.VITE_SENTRY_DSN ?? '',

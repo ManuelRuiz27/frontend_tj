@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+﻿import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import { isSecurePassword, isValidEmail } from '../lib/validators';
@@ -20,7 +20,7 @@ const Login = () => {
 
   useEffect(() => {
     if (authStatus === 'authenticated') {
-      setStatusMessage('Bienvenido. Te estamos redirigiendo a tu tablero.');
+      setStatusMessage('Listo, entrando a tu perfil.');
       setFormError('');
       navigate('/perfil', { replace: true });
     }
@@ -38,13 +38,13 @@ const Login = () => {
     setStatusMessage('');
 
     if (!isUsernameValid) {
-      setFormError('Ingresa un correo electronico valido.');
+      setFormError('Escribe un correo electrónico válido.');
       return;
     }
 
     if (!isPasswordValid) {
       setFormError(
-        'Tu contrasena debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.',
+        'Tu contraseña debe tener mínimo 8 caracteres con mayúsculas, minúsculas y números.',
       );
       return;
     }
@@ -55,9 +55,9 @@ const Login = () => {
         username: normalizedUsername,
         password,
       });
-      setStatusMessage('Inicio de sesion exitoso. Cargando tu informacion...');
+      setStatusMessage('Ingreso exitoso. Cargando tus datos...');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No pudimos iniciar sesion. Intenta nuevamente.';
+      const message = error instanceof Error ? error.message : 'No pudimos iniciar sesión. Intenta de nuevo.';
       setFormError(message);
     }
   };
@@ -68,20 +68,14 @@ const Login = () => {
 
   return (
     <main className="login" aria-labelledby="login-title">
-      <header className="login__header">
-        <div className="login__logo" aria-hidden="true">
-          <img src="/icons/logo.svg" alt="Tarjeta Joven" />
-        </div>
-        <h1 id="login-title" className="visually-hidden">
-          Inicia sesion con tu usuario
-        </h1>
-      </header>
-
       <section className="login__card" aria-labelledby="login-form">
-        <h2 id="login-form">Acceso seguro</h2>
+        <h1 id="login-title" className="visually-hidden">
+          Inicia sesión con tu usuario
+        </h1>
+        <h2 id="login-form">Inicia sesión</h2>
         <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div className={`login__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Correo electronico</label>
+            <label htmlFor="username">Correo electrónico</label>
             <input
               id="username"
               type="email"
@@ -96,12 +90,12 @@ const Login = () => {
               required
             />
             {!isUsernameValid && username && (
-              <p className="login__error">Debes capturar un correo electronico valido.</p>
+              <p className="login__error">Ingresa un correo válido.</p>
             )}
           </div>
 
           <div className={`login__field ${password && !isPasswordValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="password">Contrasena</label>
+            <label htmlFor="password">Contraseña</label>
             <input
               id="password"
               type="password"
@@ -111,22 +105,22 @@ const Login = () => {
                 setStatusMessage('');
               }}
               minLength={PASSWORD_MIN_LENGTH}
-              placeholder="Ingresa tu contrasena"
+              placeholder="Escribe tu contraseña"
               autoComplete="current-password"
               required
             />
             {!isPasswordValid && password && (
               <p className="login__error">
-                Debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.
+                Debe tener mínimo 8 caracteres con mayúsculas, minúsculas y números.
               </p>
             )}
           </div>
 
           <button type="submit" className="login__submit" disabled={!canSubmit}>
-            {authStatus === 'loading' ? 'Verificando...' : 'Iniciar sesion'}
+            {authStatus === 'loading' ? 'Verificando...' : 'Iniciar sesión'}
           </button>
           <button type="button" className="login__secondary" onClick={handlePhysicalCardClick}>
-            Ya tengo tarjeta fisica
+            Ya tengo tarjeta física
           </button>
           <p className="login__status" role="status" aria-live="polite">
             {formError || statusMessage}
@@ -135,11 +129,15 @@ const Login = () => {
       </section>
 
       <footer className="login__footer">
-        <p>Aun no tienes cuenta?</p>
+        <p>¿Aún no tienes cuenta?</p>
         <Link to="/registro">Registrarme ahora</Link>
       </footer>
+      <div className="login__brand" aria-hidden="true">
+        <img src="/icons/logo.svg" alt="Tarjeta Joven" />
+      </div>
     </main>
   );
 };
 
 export default Login;
+

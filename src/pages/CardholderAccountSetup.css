@@ -1,4 +1,4 @@
-.cardholder-account {
+﻿.cardholder-account {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -8,38 +8,58 @@
 
 .cardholder-account__card {
   width: min(540px, 100%);
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: clamp(24px, 5vw, 48px);
-  box-shadow: var(--shadow-md);
+  position: relative;
+  padding: clamp(28px, 5vw, 52px);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: linear-gradient(140deg, rgba(5, 90, 28, 0.95), rgba(118, 184, 42, 0.9));
+  box-shadow: 0 22px 34px rgba(5, 90, 28, 0.32);
   display: grid;
   gap: 20px;
+  color: #fff;
+  --heading-color: #fff;
+}
+
+.cardholder-account__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.9) 0, transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.8) 0, transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.6) 0, transparent 55%);
+}
+
+.cardholder-account__card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .cardholder-account__step {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--color-neutral-600);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .cardholder-account__description {
   margin: 0;
-  color: var(--color-neutral-600);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .cardholder-account__summary {
-  background: var(--color-primary-100);
-  border-radius: var(--radius-md);
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: grid;
   gap: 4px;
 }
 
 .cardholder-account__summary p {
   margin: 0;
-  color: var(--color-neutral-700);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .cardholder-account__form {
@@ -54,19 +74,22 @@
 
 .cardholder-account__field label {
   font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .cardholder-account__field input {
   padding: 14px 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-neutral-300);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 1rem;
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
 }
 
 .cardholder-account__field input:focus {
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(118, 184, 42, 0.2);
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
 .cardholder-account__field.is-invalid input {
@@ -75,8 +98,8 @@
 
 .cardholder-account__hint {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--color-neutral-600);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .cardholder-account__submit {
@@ -105,11 +128,13 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .cardholder-account__links a {
-  color: var(--color-accent-500);
+  color: var(--color-accent-200);
   text-decoration: underline;
   font-weight: 600;
 }
+

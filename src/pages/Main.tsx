@@ -4,16 +4,16 @@ import './Main.css';
 
 const highlights = [
   {
-    title: 'Descuentos exclusivos',
-    description: 'Aprovecha promociones en comercios aliados, eventos culturales y transporte.'
+    title: 'Descuentos al instante',
+    description: 'Promos en cafés, bienestar y eventos aliados.'
   },
   {
-    title: 'Programas sociales',
-    description: 'Accede a convocatorias para becas, emprendimiento y formación continua.'
+    title: 'Programas que suman',
+    description: 'Becas, talleres y apoyos con seguimiento simple.'
   },
   {
     title: 'Experiencias únicas',
-    description: 'Participa en actividades deportivas, artísticas y de voluntariado con otros jóvenes.'
+    description: 'Explora deporte, arte y voluntariados con más jóvenes.'
   }
 ];
 
@@ -23,11 +23,8 @@ const Main = () => {
       <Hero />
       <section className="main__section" aria-labelledby="main-title">
         <div className="main__header">
-          <h2 id="main-title">¿Por qué solicitar tu Tarjeta Joven?</h2>
-          <p>
-            Diseñamos un ecosistema digital con identidad verificable, seguro y listo para integrarse con la
-            wallet ciudadana en próximas fases.
-          </p>
+          <h2 id="main-title">¿Por qué pedir tu Tarjeta Joven?</h2>
+          <p>Es tu identidad digital segura para acceder a servicios, descuentos y futuras integraciones.</p>
         </div>
         <div className="main__grid">
           {highlights.map((item) => (
@@ -37,14 +34,19 @@ const Main = () => {
             </article>
           ))}
         </div>
+        <div className="main__section-footer">
+          <Link to="/help" className="main__link">
+            Conoce más
+          </Link>
+        </div>
       </section>
       <section className="main__cta" aria-labelledby="cta-title">
         <div>
-          <h2 id="cta-title">Comienza hoy mismo</h2>
-          <p>Regístrate en línea y recibe tu credencial digital al instante.</p>
+          <h2 id="cta-title">Comienza hoy</h2>
+          <p>Regístrate en línea y usa tu credencial digital al momento.</p>
         </div>
         <Link to="/registro" className="main__cta-button">
-          Quiero registrarme
+          Registrarme ahora
         </Link>
       </section>
     </main>

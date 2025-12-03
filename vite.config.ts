@@ -18,7 +18,7 @@ export default defineConfig({
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#0d7a5f',
+        theme_color: '#055a1c',
         description:
           'Consulta beneficios, credenciales digitales y servicios para jóvenes desde cualquier dispositivo.',
         icons: [
@@ -41,6 +41,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {

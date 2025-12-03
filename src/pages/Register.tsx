@@ -1,29 +1,34 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+﻿import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import InputFile from '../components/InputFile';
 import Snackbar, { SnackbarMessage } from '../components/Snackbar';
 import { cardholderApi } from '../lib/api/cardholders';
+import { identityValidationApi } from '../lib/api/identityValidation';
 import { isApiError } from '../lib/apiClient';
-import { isValidCurp, normalizeCurp } from '../lib/curp';
+import { normalizeCurp } from '../lib/curp';
 import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Register.css';
 
-const DATE_REGEX = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
 const PASSWORD_MIN_LENGTH = 8;
 const POSTAL_CODE_REGEX = /^\d{5}$/;
 const HOUSE_NUMBER_REGEX = /^[0-9]{1,5}[A-Z0-9\-]{0,4}$/;
 const fileAccept = '.jpg,.jpeg,.png,.pdf';
 
-type RegisterFormState = {
+const stepTitles = ['Validacion de identidad', 'Confirma tus datos', 'Crea tu cuenta'];
+
+type IdentityData = {
   nombres: string;
   apellidos: string;
   fechaNacimiento: string;
   curp: string;
-  username: string;
   calle: string;
   numero: string;
   cp: string;
   colonia: string;
+};
+
+type AccountData = {
+  username: string;
   password: string;
   aceptaTerminos: boolean;
 };
@@ -33,50 +38,58 @@ type FileFieldState = {
   error: string;
 };
 
-type RegisterFilesState = {
-  ine: FileFieldState;
-  comprobante: FileFieldState;
-  curpDoc: FileFieldState;
+type DocumentFilesState = {
+  front: FileFieldState;
+  back: FileFieldState;
 };
 
-const createInitialFilesState = (): RegisterFilesState => ({
-  ine: { file: null, error: '' },
-  comprobante: { file: null, error: '' },
-  curpDoc: { file: null, error: '' },
+type AddressErrors = {
+  calle: string;
+  numero: string;
+  cp: string;
+  colonia: string;
+};
+
+type AccountErrors = {
+  username: string;
+  password: string;
+  aceptaTerminos: string;
+};
+
+type AddressField = keyof Pick<IdentityData, 'calle' | 'numero' | 'cp' | 'colonia'>;
+
+const createInitialDocumentState = (): DocumentFilesState => ({
+  front: { file: null, error: '' },
+  back: { file: null, error: '' },
 });
 
-const initialFormState: RegisterFormState = {
-  nombres: '',
-  apellidos: '',
-  fechaNacimiento: '',
-  curp: '',
-  username: '',
+const emptyAddressErrors: AddressErrors = {
   calle: '',
   numero: '',
   cp: '',
   colonia: '',
-  password: '',
-  aceptaTerminos: false,
 };
 
-const initialTouched: Record<keyof RegisterFormState, boolean> = {
-  nombres: false,
-  apellidos: false,
-  fechaNacimiento: false,
-  curp: false,
-  username: false,
-  calle: false,
-  numero: false,
-  cp: false,
-  colonia: false,
-  password: false,
-  aceptaTerminos: false,
+const emptyAccountErrors: AccountErrors = {
+  username: '',
+  password: '',
+  aceptaTerminos: '',
 };
 
 const Register = () => {
-  const [formData, setFormData] = useState<RegisterFormState>(initialFormState);
-  const [touched, setTouched] = useState(initialTouched);
-  const [files, setFiles] = useState<RegisterFilesState>(() => createInitialFilesState());
+  const [identityData, setIdentityData] = useState<IdentityData | null>(null);
+  const [accountData, setAccountData] = useState<AccountData>({
+    username: '',
+    password: '',
+    aceptaTerminos: false,
+  });
+  const [documents, setDocuments] = useState<DocumentFilesState>(() => createInitialDocumentState());
+  const [addressErrors, setAddressErrors] = useState<AddressErrors>(emptyAddressErrors);
+  const [accountErrors, setAccountErrors] = useState<AccountErrors>(emptyAccountErrors);
+  const [allowAddressEdit, setAllowAddressEdit] = useState(false);
+  const [acceptsPrivacy, setAcceptsPrivacy] = useState(false);
+  const [privacyTouched, setPrivacyTouched] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [snackbar, setSnackbar] = useState<SnackbarMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,26 +106,7 @@ const Register = () => {
   }, [locationSnackbar, location.pathname, navigate]);
 
   const validateText = (value: string) => value.trim().length >= 2;
-
-  const validateDate = (value: string) => {
-    if (!DATE_REGEX.test(value)) {
-      return false;
-    }
-
-    const [day, month, year] = value.split('/').map(Number);
-    const date = new Date(year, month - 1, day);
-
-    return (
-      date.getFullYear() === year &&
-      date.getMonth() === month - 1 &&
-      date.getDate() === day &&
-      year <= new Date().getFullYear() - 15
-    );
-  };
-
-  const validateCurp = (value: string) => isValidCurp(value);
-  const validateUsername = (value: string) => isValidEmail(value);
-  const validatePassword = (value: string) => isSecurePassword(value, PASSWORD_MIN_LENGTH);
+  const validatePostalCode = (value: string) => POSTAL_CODE_REGEX.test(value.trim());
   const validateStreetNumber = (value: string) => {
     const normalized = value.trim();
     if (!normalized) {
@@ -124,7 +118,6 @@ const Register = () => {
     const compact = normalized.replace(/\s+/g, '').toUpperCase();
     return HOUSE_NUMBER_REGEX.test(compact);
   };
-  const validatePostalCode = (value: string) => POSTAL_CODE_REGEX.test(value.trim());
 
   const validateFile = (file: File | null) => {
     if (!file) {
@@ -137,55 +130,15 @@ const Register = () => {
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      return 'El archivo debe pesar maximo 2MB.';
+      return 'Maximo 2 MB por archivo.';
     }
 
     return '';
   };
 
-  const errors = useMemo(
-    () => ({
-      nombres: validateText(formData.nombres) ? '' : 'Ingresa tu nombre completo.',
-      apellidos: validateText(formData.apellidos) ? '' : 'Ingresa tus apellidos.',
-      fechaNacimiento: validateDate(formData.fechaNacimiento)
-        ? ''
-        : 'Usa el formato DD/MM/AAAA y verifica que seas mayor de 15 anos.',
-      curp: validateCurp(formData.curp) ? '' : 'Revisa tu CURP. Debe coincidir con el formato oficial.',
-      username: validateUsername(formData.username)
-        ? ''
-        : 'Ingresa un correo electronico valido.',
-      calle: validateText(formData.calle) ? '' : 'Ingresa la calle donde resides.',
-      numero: validateStreetNumber(formData.numero)
-        ? ''
-        : 'Ingresa un numero exterior valido (usa S/N si aplica).',
-      cp: validatePostalCode(formData.cp) ? '' : 'El codigo postal debe tener 5 digitos.',
-      colonia: validateText(formData.colonia) ? '' : 'Ingresa la colonia donde resides.',
-      password: validatePassword(formData.password)
-        ? ''
-        : 'Tu contrasena debe tener al menos 8 caracteres e incluir mayusculas, minusculas y numeros.',
-      aceptaTerminos: formData.aceptaTerminos ? '' : 'Debes aceptar los terminos y politicas.',
-    }),
-    [formData],
-  );
-
-  const handleInputChange = (field: keyof RegisterFormState, value: string | boolean) => {
+  const handleFileChange = (key: keyof DocumentFilesState, file: File | null) => {
     setStatusMessage('');
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleBlur = (field: keyof RegisterFormState) => {
-    setTouched((prev) => ({
-      ...prev,
-      [field]: true,
-    }));
-  };
-
-  const handleFileChange = (key: keyof RegisterFilesState, file: File | null) => {
-    setStatusMessage('');
-    setFiles((prev) => {
+    setDocuments((prev) => {
       const errorMessage = file ? validateFile(file) : 'Este archivo es obligatorio.';
       return {
         ...prev,
@@ -194,87 +147,99 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setTouched({
-      nombres: true,
-      apellidos: true,
-      fechaNacimiento: true,
-      curp: true,
-      username: true,
-      calle: true,
-      numero: true,
-      cp: true,
-      colonia: true,
-      password: true,
-      aceptaTerminos: true,
-    });
-
-    const fileErrors = {
-      ine: validateFile(files.ine.file),
-      comprobante: validateFile(files.comprobante.file),
-      curpDoc: validateFile(files.curpDoc.file),
-    };
-
-    const hasErrors =
-      Object.values(errors).some(Boolean) || Object.values(fileErrors).some((message) => message !== '');
-
-    setFiles((prev) => ({
-      ine: { file: fileErrors.ine ? null : prev.ine.file, error: fileErrors.ine },
-      comprobante: { file: fileErrors.comprobante ? null : prev.comprobante.file, error: fileErrors.comprobante },
-      curpDoc: { file: fileErrors.curpDoc ? null : prev.curpDoc.file, error: fileErrors.curpDoc },
-    }));
-
-    if (hasErrors) {
-      setStatusMessage('Por favor corrige los campos resaltados.');
+  const handleAddressChange = (field: AddressField, value: string) => {
+    if (!identityData) {
       return;
     }
 
-    const ineFile = files.ine.file;
-    const comprobanteFile = files.comprobante.file;
-    const curpDocFile = files.curpDoc.file;
+    setStatusMessage('');
+    setIdentityData({
+      ...identityData,
+      [field]: value,
+    });
+  };
 
-    if (!ineFile || !comprobanteFile || !curpDocFile) {
-      setStatusMessage('Por favor adjunta los documentos requeridos.');
+  const handleAccountChange = <K extends keyof AccountData>(field: K, value: AccountData[K]) => {
+    setStatusMessage('');
+    setAccountErrors(emptyAccountErrors);
+    setAccountData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const resetAll = () => {
+    setIdentityData(null);
+    setAccountData({ username: '', password: '', aceptaTerminos: false });
+    setDocuments(createInitialDocumentState());
+    setAddressErrors(emptyAddressErrors);
+    setAccountErrors(emptyAccountErrors);
+    setAllowAddressEdit(false);
+    setAcceptsPrivacy(false);
+    setPrivacyTouched(false);
+    setFileResetKey((value) => value + 1);
+    setCurrentStep(0);
+  };
+
+  const handleDocumentUpload = async () => {
+    const frontFile = documents.front.file;
+    const backFile = documents.back.file;
+    const frontError = validateFile(frontFile);
+    const backError = validateFile(backFile);
+
+    setDocuments((prev) => ({
+      front: { file: frontError ? null : frontFile, error: frontError },
+      back: { file: backError ? null : backFile, error: backError },
+    }));
+    setPrivacyTouched(true);
+
+    if (frontError || backError) {
+      setStatusMessage('Adjunta los archivos obligatorios.');
+      return;
+    }
+
+    if (!acceptsPrivacy) {
+      setStatusMessage('Debes aceptar el Aviso de privacidad.');
+      return;
+    }
+
+    if (!frontFile || !backFile) {
+      setStatusMessage('Adjunta las imagenes de la INE.');
       return;
     }
 
     setIsSubmitting(true);
+    setStatusMessage('Validando INE...');
     setSnackbar(null);
-    setStatusMessage('Enviando registro...');
 
     try {
-      await cardholderApi.submitRegistration({
-        nombres: formData.nombres.trim(),
-        apellidos: formData.apellidos.trim(),
-        fechaNacimiento: formData.fechaNacimiento.trim(),
-        curp: normalizeCurp(formData.curp),
-        username: formData.username.trim().toLowerCase(),
-        calle: formData.calle.trim(),
-        numero: formData.numero.trim(),
-        cp: formData.cp.trim(),
-        colonia: formData.colonia.trim(),
-        password: formData.password,
-        aceptaTerminos: formData.aceptaTerminos,
-        ine: ineFile,
-        comprobante: comprobanteFile,
-        curpDoc: curpDocFile,
+      const response = await identityValidationApi.verifyIne({
+        ineFront: frontFile,
+        ineBack: backFile,
+        acceptsPrivacy,
       });
 
-      setStatusMessage('Registro enviado. Te avisaremos por correo cuando sea validado.');
-      setSnackbar({
-        message: 'Recibimos tu solicitud. Te contactaremos al validar tu documentacion.',
-        variant: 'success',
+      setIdentityData({
+        nombres: response.nombres,
+        apellidos: response.apellidos,
+        fechaNacimiento: response.fechaNacimiento,
+        curp: response.curp,
+        calle: response.calle,
+        numero: response.numero,
+        cp: response.cp,
+        colonia: response.colonia,
       });
-      setFormData(initialFormState);
-      setTouched(initialTouched);
-      setFiles(createInitialFilesState());
-      setFileResetKey((value) => value + 1);
+      setAllowAddressEdit(false);
+      setAddressErrors(emptyAddressErrors);
+      setStatusMessage('Informacion detectada. Revisa los datos antes de continuar.');
+      setCurrentStep(1);
     } catch (error) {
       const message =
         isApiError(error) && error.message
           ? error.message
-          : 'No pudimos enviar tu registro. Intenta nuevamente.';
+          : error instanceof Error
+            ? error.message
+            : 'No pudimos validar tu INE. Intenta de nuevo.';
       setStatusMessage(message);
       setSnackbar({ message, variant: 'error' });
     } finally {
@@ -282,11 +247,330 @@ const Register = () => {
     }
   };
 
+  const confirmIdentityStep = () => {
+    if (!identityData) {
+      setStatusMessage('Primero sube tu INE.');
+      return;
+    }
+
+    if (allowAddressEdit) {
+      const nextErrors: AddressErrors = {
+        calle: validateText(identityData.calle) ? '' : 'Escribe la calle donde vives.',
+        numero: validateStreetNumber(identityData.numero) ? '' : 'Ingresa un numero exterior valido (usa S/N si aplica).',
+        cp: validatePostalCode(identityData.cp) ? '' : 'El codigo postal debe tener 5 digitos.',
+        colonia: validateText(identityData.colonia) ? '' : 'Escribe tu colonia.',
+      };
+
+      setAddressErrors(nextErrors);
+
+      if (Object.values(nextErrors).some(Boolean)) {
+        setStatusMessage('Corrige tu domicilio para continuar.');
+        return;
+      }
+    } else {
+      setAddressErrors(emptyAddressErrors);
+    }
+
+    setStatusMessage('');
+    setCurrentStep(2);
+  };
+
+  const handleAccountSubmit = async () => {
+    if (!identityData) {
+      setStatusMessage('Valida tu identidad antes de crear la cuenta.');
+      return;
+    }
+
+    const nextErrors: AccountErrors = {
+      username: isValidEmail(accountData.username) ? '' : 'Escribe un correo valido.',
+      password: isSecurePassword(accountData.password, PASSWORD_MIN_LENGTH)
+        ? ''
+        : 'Tu contrasena debe tener minimo 8 caracteres con mayusculas, minusculas y numeros.',
+      aceptaTerminos: accountData.aceptaTerminos ? '' : 'Acepta los Terminos de uso y el Aviso de privacidad.',
+    };
+
+    setAccountErrors(nextErrors);
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      setStatusMessage('Revisa los campos marcados.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMessage('Creando tu cuenta...');
+    setSnackbar(null);
+
+    try {
+      await cardholderApi.submitRegistration({
+        nombres: identityData.nombres,
+        apellidos: identityData.apellidos,
+        fechaNacimiento: identityData.fechaNacimiento,
+        curp: normalizeCurp(identityData.curp),
+        calle: identityData.calle,
+        numero: identityData.numero,
+        cp: identityData.cp,
+        colonia: identityData.colonia,
+        username: accountData.username.trim().toLowerCase(),
+        password: accountData.password,
+        aceptaTerminos: accountData.aceptaTerminos,
+      });
+
+      setSnackbar({
+        message: 'Recibimos tu registro. Te contactaremos al validar tus documentos.',
+        variant: 'success',
+      });
+      setStatusMessage('Listo. Te avisaremos por correo cuando activemos tu Tarjeta Joven.');
+      resetAll();
+    } catch (error) {
+      const message =
+        isApiError(error) && error.message ? error.message : 'No pudimos crear tu cuenta. Intenta nuevamente.';
+      setStatusMessage(message);
+      setSnackbar({ message, variant: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (currentStep === 0) {
+      await handleDocumentUpload();
+      return;
+    }
+
+    if (currentStep === 1) {
+      confirmIdentityStep();
+      return;
+    }
+
+    await handleAccountSubmit();
+  };
+
+  const goBack = () => {
+    if (currentStep === 0) {
+      return;
+    }
+    setStatusMessage('');
+    setCurrentStep((step) => Math.max(step - 1, 0));
+  };
+
+  const progress = ((currentStep + 1) / stepTitles.length) * 100;
+  const privacyError = privacyTouched && !acceptsPrivacy ? 'Debes aceptar el Aviso de privacidad.' : '';
+
+  const getSubmitLabel = () => {
+    if (currentStep === 0) {
+      return isSubmitting ? 'Validando INE...' : 'Enviar documentos';
+    }
+    if (currentStep === 1) {
+      return 'Confirmar y continuar';
+    }
+    return isSubmitting ? 'Creando cuenta...' : 'Crear mi cuenta';
+  };
+
+  const isSubmitDisabled = currentStep === 1 ? !identityData : isSubmitting;
+
+  const renderDocumentStep = () => (
+    <fieldset className="register__fieldset">
+      <legend>Validacion de identidad</legend>
+      <InputFile
+        key={`ine-front-${fileResetKey}`}
+        label="INE - frente"
+        accept={fileAccept}
+        required
+        helperText="JPG, PNG o PDF. Maximo 2 MB."
+        error={documents.front.error}
+        onFileSelect={(file) => handleFileChange('front', file)}
+      />
+      <InputFile
+        key={`ine-back-${fileResetKey}`}
+        label="INE - reverso"
+        accept={fileAccept}
+        required
+        helperText="JPG, PNG o PDF. Maximo 2 MB."
+        error={documents.back.error}
+        onFileSelect={(file) => handleFileChange('back', file)}
+      />
+      <div className={`register__checkbox ${privacyError ? 'is-invalid' : ''}`}>
+        <input
+          id="privacyAcceptance"
+          name="privacyAcceptance"
+          type="checkbox"
+          checked={acceptsPrivacy}
+          onChange={(event) => {
+            setPrivacyTouched(true);
+            setStatusMessage('');
+            setAcceptsPrivacy(event.target.checked);
+          }}
+          required
+        />
+        <label htmlFor="privacyAcceptance">
+          Acepto el <a href="#privacidad">Aviso de privacidad</a> para validar mi identidad.
+        </label>
+      </div>
+      {privacyError && <p className="register__error">{privacyError}</p>}
+    </fieldset>
+  );
+
+  const renderReviewStep = () => (
+    <fieldset className="register__fieldset">
+      <legend>Confirma tus datos</legend>
+      {!identityData ? (
+        <p>Sube tus documentos para mostrar la informacion detectada.</p>
+      ) : (
+        <>
+          <div className="register__grid">
+            <div className="register__field">
+              <label htmlFor="nombres">Nombre(s)</label>
+              <input id="nombres" type="text" value={identityData.nombres} disabled />
+            </div>
+            <div className="register__field">
+              <label htmlFor="apellidos">Apellidos</label>
+              <input id="apellidos" type="text" value={identityData.apellidos} disabled />
+            </div>
+            <div className="register__field">
+              <label htmlFor="fechaNacimiento">Fecha de nacimiento</label>
+              <input id="fechaNacimiento" type="text" value={identityData.fechaNacimiento} disabled />
+            </div>
+            <div className="register__field">
+              <label htmlFor="curp">CURP</label>
+              <input id="curp" type="text" value={identityData.curp} disabled />
+            </div>
+          </div>
+          <div className="register__checkbox">
+            <input
+              id="allowAddressEdit"
+              name="allowAddressEdit"
+              type="checkbox"
+              checked={allowAddressEdit}
+              onChange={(event) => {
+                setAllowAddressEdit(event.target.checked);
+                setAddressErrors(emptyAddressErrors);
+                setStatusMessage('');
+              }}
+            />
+            <label htmlFor="allowAddressEdit">Quiero corregir mi domicilio</label>
+          </div>
+          <div className="register__grid">
+            <div className={`register__field ${allowAddressEdit && addressErrors.calle ? 'is-invalid' : ''}`}>
+              <label htmlFor="calle">Calle</label>
+              <input
+                id="calle"
+                name="calle"
+                type="text"
+                value={identityData.calle}
+                onChange={(event) => handleAddressChange('calle', event.target.value)}
+                disabled={!allowAddressEdit}
+              />
+              {allowAddressEdit && addressErrors.calle && <p className="register__error">{addressErrors.calle}</p>}
+            </div>
+            <div className={`register__field ${allowAddressEdit && addressErrors.numero ? 'is-invalid' : ''}`}>
+              <label htmlFor="numero">Numero exterior</label>
+              <input
+                id="numero"
+                name="numero"
+                type="text"
+                value={identityData.numero}
+                onChange={(event) => handleAddressChange('numero', event.target.value)}
+                disabled={!allowAddressEdit}
+              />
+              {allowAddressEdit && addressErrors.numero && <p className="register__error">{addressErrors.numero}</p>}
+            </div>
+            <div className={`register__field ${allowAddressEdit && addressErrors.cp ? 'is-invalid' : ''}`}>
+              <label htmlFor="cp">Codigo postal</label>
+              <input
+                id="cp"
+                name="cp"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                value={identityData.cp}
+                onChange={(event) => handleAddressChange('cp', event.target.value)}
+                disabled={!allowAddressEdit}
+              />
+              {allowAddressEdit && addressErrors.cp && <p className="register__error">{addressErrors.cp}</p>}
+            </div>
+            <div className={`register__field ${allowAddressEdit && addressErrors.colonia ? 'is-invalid' : ''}`}>
+              <label htmlFor="colonia">Colonia</label>
+              <input
+                id="colonia"
+                name="colonia"
+                type="text"
+                value={identityData.colonia}
+                onChange={(event) => handleAddressChange('colonia', event.target.value)}
+                disabled={!allowAddressEdit}
+              />
+              {allowAddressEdit && addressErrors.colonia && <p className="register__error">{addressErrors.colonia}</p>}
+            </div>
+          </div>
+          <p>Confirma que los datos sean correctos antes de continuar.</p>
+        </>
+      )}
+    </fieldset>
+  );
+
+  const renderAccountStep = () => (
+    <fieldset className="register__fieldset">
+      <legend>Crea tu cuenta</legend>
+      {!identityData && <p>Valida tu INE antes de crear la cuenta.</p>}
+      <div className={`register__field ${accountErrors.username ? 'is-invalid' : ''}`}>
+        <label htmlFor="username">Correo electronico</label>
+        <input
+          id="username"
+          name="username"
+          type="email"
+          value={accountData.username}
+          onChange={(event) => handleAccountChange('username', event.target.value)}
+          placeholder="correo@dominio.com"
+          inputMode="email"
+          autoComplete="username"
+          required
+        />
+        {accountErrors.username && <p className="register__error">{accountErrors.username}</p>}
+      </div>
+      <div className={`register__field ${accountErrors.password ? 'is-invalid' : ''}`}>
+        <label htmlFor="password">Contrasena</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          value={accountData.password}
+          onChange={(event) => handleAccountChange('password', event.target.value)}
+          minLength={PASSWORD_MIN_LENGTH}
+          placeholder="********"
+          autoComplete="new-password"
+          required
+        />
+        {accountErrors.password && <p className="register__error">{accountErrors.password}</p>}
+      </div>
+      <div className={`register__checkbox ${accountErrors.aceptaTerminos ? 'is-invalid' : ''}`}>
+        <input
+          id="aceptaTerminos"
+          name="aceptaTerminos"
+          type="checkbox"
+          checked={accountData.aceptaTerminos}
+          onChange={(event) => handleAccountChange('aceptaTerminos', event.target.checked)}
+          required
+        />
+        <label htmlFor="aceptaTerminos">
+          Acepto los <a href="#terminos">Terminos de uso</a> y el <a href="#privacidad">Aviso de privacidad</a>.
+        </label>
+      </div>
+      {accountErrors.aceptaTerminos && <p className="register__error">{accountErrors.aceptaTerminos}</p>}
+    </fieldset>
+  );
+
+  const renderCurrentStep = () => {
+    if (currentStep === 0) return renderDocumentStep();
+    if (currentStep === 1) return renderReviewStep();
+    return renderAccountStep();
+  };
+
   return (
     <main className="register" aria-labelledby="register-title">
       <header className="register__header">
-        <h1 id="register-title">Registro Tarjeta Joven</h1>
-        <p>Completa la informacion. Validaremos tus documentos en un maximo de 48 horas.</p>
+        <h1 id="register-title">Registrate en Tarjeta Joven</h1>
+        <p>Sube tu INE, confirma tus datos y crea tu cuenta digital en minutos.</p>
       </header>
       {snackbar && (
         <Snackbar
@@ -296,223 +580,37 @@ const Register = () => {
         />
       )}
       <form className="register__form" onSubmit={handleSubmit} noValidate>
-        <fieldset className="register__fieldset">
-          <legend>Datos personales</legend>
-          <div className="register__grid">
-            <div className={`register__field ${touched.nombres && errors.nombres ? 'is-invalid' : ''}`}>
-              <label htmlFor="nombres">Nombre(s)</label>
-              <input
-                id="nombres"
-                name="nombres"
-                type="text"
-                value={formData.nombres}
-                onChange={(event) => handleInputChange('nombres', event.target.value)}
-                onBlur={() => handleBlur('nombres')}
-                required
-              />
-              {touched.nombres && errors.nombres && <p className="register__error">{errors.nombres}</p>}
-            </div>
-            <div className={`register__field ${touched.apellidos && errors.apellidos ? 'is-invalid' : ''}`}>
-              <label htmlFor="apellidos">Apellidos</label>
-              <input
-                id="apellidos"
-                name="apellidos"
-                type="text"
-                value={formData.apellidos}
-                onChange={(event) => handleInputChange('apellidos', event.target.value)}
-                onBlur={() => handleBlur('apellidos')}
-                required
-              />
-              {touched.apellidos && errors.apellidos && <p className="register__error">{errors.apellidos}</p>}
-            </div>
+        <div className="register__progress" aria-live="polite">
+          <div className="register__progress-bar">
+            <div className="register__progress-bar-fill" style={{ width: `${progress}%` }} />
           </div>
-          <div className="register__grid">
-            <div className={`register__field ${touched.fechaNacimiento && errors.fechaNacimiento ? 'is-invalid' : ''}`}>
-              <label htmlFor="fechaNacimiento">Fecha de nacimiento (DD/MM/AAAA)</label>
-              <input
-                id="fechaNacimiento"
-                name="fechaNacimiento"
-                type="text"
-                inputMode="numeric"
-                placeholder="DD/MM/AAAA"
-                value={formData.fechaNacimiento}
-                onChange={(event) => handleInputChange('fechaNacimiento', event.target.value)}
-                onBlur={() => handleBlur('fechaNacimiento')}
-                required
-              />
-              {touched.fechaNacimiento && errors.fechaNacimiento && (
-                <p className="register__error">{errors.fechaNacimiento}</p>
-              )}
-            </div>
-            <div className={`register__field ${touched.curp && errors.curp ? 'is-invalid' : ''}`}>
-              <label htmlFor="curp">CURP</label>
-              <input
-                id="curp"
-                name="curp"
-                type="text"
-                value={formData.curp}
-                onChange={(event) => handleInputChange('curp', event.target.value.toUpperCase())}
-                onBlur={() => handleBlur('curp')}
-                maxLength={18}
-                required
-              />
-              {touched.curp && errors.curp && <p className="register__error">{errors.curp}</p>}
-            </div>
+          <div className="register__steps">
+            {stepTitles.map((title, index) => (
+              <div
+                key={title}
+                className={`register__step${index === currentStep ? ' register__step--active' : ''}${
+                  index < currentStep ? ' register__step--completed' : ''
+                }`}
+              >
+                <span className="register__step-indicator">{index + 1}</span>
+                <p>{title}</p>
+              </div>
+            ))}
           </div>
-          <div className="register__grid">
-            <div className={`register__field ${touched.calle && errors.calle ? 'is-invalid' : ''}`}>
-              <label htmlFor="calle">Calle</label>
-              <input
-                id="calle"
-                name="calle"
-                type="text"
-                value={formData.calle}
-                onChange={(event) => handleInputChange('calle', event.target.value)}
-                onBlur={() => handleBlur('calle')}
-                autoComplete="address-line1"
-                required
-              />
-              {touched.calle && errors.calle && <p className="register__error">{errors.calle}</p>}
-            </div>
-            <div className={`register__field ${touched.numero && errors.numero ? 'is-invalid' : ''}`}>
-              <label htmlFor="numero">Numero exterior</label>
-              <input
-                id="numero"
-                name="numero"
-                type="text"
-                value={formData.numero}
-                onChange={(event) => handleInputChange('numero', event.target.value)}
-                onBlur={() => handleBlur('numero')}
-                placeholder="123 o S/N"
-                autoComplete="address-line2"
-                required
-              />
-              {touched.numero && errors.numero && <p className="register__error">{errors.numero}</p>}
-            </div>
-            <div className={`register__field ${touched.cp && errors.cp ? 'is-invalid' : ''}`}>
-              <label htmlFor="cp">Codigo postal (CP)</label>
-              <input
-                id="cp"
-                name="cp"
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                value={formData.cp}
-                onChange={(event) => handleInputChange('cp', event.target.value)}
-                onBlur={() => handleBlur('cp')}
-                autoComplete="postal-code"
-                required
-              />
-              {touched.cp && errors.cp && <p className="register__error">{errors.cp}</p>}
-            </div>
-          </div>
-          <div className={`register__field ${touched.colonia && errors.colonia ? 'is-invalid' : ''}`}>
-            <label htmlFor="colonia">Colonia</label>
-            <input
-              id="colonia"
-              name="colonia"
-              type="text"
-              value={formData.colonia}
-              onChange={(event) => handleInputChange('colonia', event.target.value)}
-              onBlur={() => handleBlur('colonia')}
-              autoComplete="address-level3"
-              required
-            />
-            {touched.colonia && errors.colonia && <p className="register__error">{errors.colonia}</p>}
-          </div>
-          <div className={`register__field ${touched.username && errors.username ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Correo electronico</label>
-            <input
-              id="username"
-              name="username"
-              type="email"
-              value={formData.username}
-              onChange={(event) => handleInputChange('username', event.target.value)}
-              onBlur={() => handleBlur('username')}
-              placeholder="correo@dominio.com"
-              inputMode="email"
-              autoComplete="username"
-              required
-            />
-            {touched.username && errors.username && (
-              <p className="register__error">{errors.username}</p>
-            )}
-          </div>
-          <div className={`register__field ${touched.password && errors.password ? 'is-invalid' : ''}`}>
-            <label htmlFor="password">Contrasena de acceso</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={(event) => handleInputChange('password', event.target.value)}
-              onBlur={() => handleBlur('password')}
-              minLength={PASSWORD_MIN_LENGTH}
-              placeholder="Define una contrasena segura"
-              autoComplete="new-password"
-              required
-            />
-            {touched.password && errors.password && <p className="register__error">{errors.password}</p>}
-          </div>
-        </fieldset>
-
-        <fieldset className="register__fieldset">
-          <legend>Documentos</legend>
-          <InputFile
-            key={`ine-${fileResetKey}`}
-            label="Identificacion oficial (INE)"
-            accept={fileAccept}
-            required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
-            error={files.ine.error}
-            onFileSelect={(file) => handleFileChange('ine', file)}
-          />
-          <InputFile
-            key={`comprobante-${fileResetKey}`}
-            label="Comprobante de domicilio"
-            accept={fileAccept}
-            required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
-            error={files.comprobante.error}
-            onFileSelect={(file) => handleFileChange('comprobante', file)}
-          />
-          <InputFile
-            key={`curpDoc-${fileResetKey}`}
-            label="CURP digital"
-            accept={fileAccept}
-            required
-            helperText="Formatos aceptados: JPG, PNG o PDF. Maximo 2MB."
-            error={files.curpDoc.error}
-            onFileSelect={(file) => handleFileChange('curpDoc', file)}
-          />
-        </fieldset>
-
-        <div className={`register__checkbox ${touched.aceptaTerminos && errors.aceptaTerminos ? 'is-invalid' : ''}`}>
-          <input
-            id="aceptaTerminos"
-            name="aceptaTerminos"
-            type="checkbox"
-            checked={formData.aceptaTerminos}
-            onChange={(event) => handleInputChange('aceptaTerminos', event.target.checked)}
-            onBlur={() => handleBlur('aceptaTerminos')}
-            required
-          />
-          <label htmlFor="aceptaTerminos">
-            He leido y acepto los <a href="#terminos">Terminos de uso</a> y la{' '}
-            <a href="#privacidad">Politica de privacidad</a>.
-          </label>
         </div>
-        {touched.aceptaTerminos && errors.aceptaTerminos && (
-          <p className="register__error">{errors.aceptaTerminos}</p>
-        )}
-
+        {renderCurrentStep()}
         <div className="register__actions">
-          <button type="submit" className="register__submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Enviando registro...' : 'Enviar registro'}
+          <button type="button" className="register__back" onClick={goBack} disabled={currentStep === 0}>
+            Anterior
           </button>
-          <p className="register__status" role="status" aria-live="polite">
-            {statusMessage}
-          </p>
+          <div className="register__actions-right">
+            <button type="submit" className="register__submit" disabled={isSubmitDisabled}>
+              {getSubmitLabel()}
+            </button>
+            <p className="register__status" role="status" aria-live="polite">
+              {statusMessage}
+            </p>
+          </div>
         </div>
       </form>
     </main>

@@ -34,7 +34,7 @@ const CardholderLookup = () => {
 
       if (lookup.hasAccount) {
         setSnackbar({
-          message: 'Esta tarjeta ya tiene credenciales generadas. Intenta iniciar sesion o recupera tu acceso.',
+          message: 'Esta tarjeta ya tiene usuario activo. Inicia sesión o recupera tu acceso.',
           variant: 'info',
         });
         return;
@@ -46,7 +46,7 @@ const CardholderLookup = () => {
         navigate('/registro', {
           state: {
             snackbar: {
-              message: 'No encontramos tu CURP. Completa tu registro para solicitar la tarjeta.',
+              message: 'No encontramos tu CURP. Regístrate para solicitar tu tarjeta.',
               variant: 'info',
             },
           },
@@ -55,9 +55,7 @@ const CardholderLookup = () => {
       }
 
       const message =
-        isApiError(error) && error.message
-          ? error.message
-          : 'No pudimos validar tu CURP. Intenta nuevamente.';
+        isApiError(error) && error.message ? error.message : 'No pudimos validar tu CURP. Inténtalo de nuevo.';
       setSnackbar({ message, variant: 'error' });
     } finally {
       setIsSubmitting(false);
@@ -68,9 +66,9 @@ const CardholderLookup = () => {
     <main className="cardholder-lookup" aria-labelledby="cardholder-lookup-title">
       <section className="cardholder-lookup__card">
         <p className="cardholder-lookup__step">Paso 1 de 2</p>
-        <h1 id="cardholder-lookup-title">Valida tu tarjeta fisica</h1>
+        <h1 id="cardholder-lookup-title">Valida tu tarjeta física</h1>
         <p className="cardholder-lookup__description">
-          Ingresa tu CURP para verificar que ya cuentas con una Tarjeta Joven fisica activa.
+          Ingresa tu CURP para confirmar que ya cuentas con una Tarjeta Joven física activa.
         </p>
 
         <form className="cardholder-lookup__form" onSubmit={handleSubmit} noValidate>
@@ -86,7 +84,7 @@ const CardholderLookup = () => {
             autoComplete="off"
             required
           />
-          <p className="cardholder-lookup__hint">Debes ingresar los 18 caracteres tal como aparecen en tu credencial.</p>
+          <p className="cardholder-lookup__hint">Escribe los 18 caracteres tal como aparecen en tu credencial.</p>
           {curp && !isCurpValid && (
             <p className="cardholder-lookup__error">Revisa tu CURP. Debe coincidir con el formato oficial.</p>
           )}
@@ -97,7 +95,7 @@ const CardholderLookup = () => {
 
         <div className="cardholder-lookup__links">
           <Link to="/login">Volver al login</Link>
-          <Link to="/registro">Necesito registrarme</Link>
+          <Link to="/registro">Quiero registrarme</Link>
         </div>
       </section>
       {snackbar && (

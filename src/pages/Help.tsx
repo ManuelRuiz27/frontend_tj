@@ -15,123 +15,108 @@ type FAQ = {
 };
 
 const categories: { id: HelpCategory | 'all'; label: string }[] = [
-  { id: 'all', label: 'Todas' },
+  { id: 'all', label: 'Todo' },
   { id: 'program', label: 'Programa' },
   { id: 'discounts', label: 'Descuentos' },
-  { id: 'support', label: 'Soporte técnico' },
+  { id: 'support', label: 'Soporte t�cnico' },
 ];
 
 const faqs: FAQ[] = [
   {
     id: 'eligibility',
     category: 'program',
-    question: '¿Quiénes pueden solicitar la Tarjeta Joven?',
-    answer:
-      'Está dirigida a  personas jóvenes entre 12 y 29 años con documento de identidad vigente.',
+    question: '�Qui�n puede solicitar la Tarjeta Joven?',
+    answer: 'J�venes de 12 a 29 a�os con identificaci�n vigente y un correo activo.',
     details: [
-      'Puedes solicitarla en linea o tramitarla en las oficinas del INPOJUVE o en las oficinas de enlace municipal de tu municipio.',
-      'Solo necesitas tu documento y un correo electrónico activo.',
+      'Puedes registrarte en l�nea o acudir a un m�dulo del INPOJUVE.',
+      'Solo necesitas tu CURP, identificaci�n y comprobante de domicilio.',
     ],
-    tags: ['requisitos', 'inscripción', 'documento'],
+    tags: ['requisitos', 'registro'],
   },
   {
     id: 'digital-card',
     category: 'program',
-    question: '¿La tarjeta es física o digital?',
-    answer:
-      'La tarjeta nace como una credencial digital para tu celular que puede integrarse con la wallet ciudadana.',
-    details: [
-      'Puedes mostrarla desde la aplicación incluso sin conexión.',
-    ],
-    tags: ['credencial', 'wallet'],
+    question: '�La tarjeta es digital o f�sica?',
+    answer: 'Nace digital y puedes vincularla con tu tarjeta f�sica si ya la tienes.',
+    details: ['Funciona incluso sin datos. Solo abre la app y muestra tu credencial.'],
+    tags: ['credencial', 'digital'],
   },
   {
     id: 'updates',
     category: 'program',
-    question: '¿Cómo me entero de nuevas convocatorias o beneficios?',
-    answer:
-      'Activa las notificaciones desde Configuración y revisa la sección de Novedades cada semana.',
+    question: '�C�mo me entero de nuevas convocatorias?',
+    answer: 'Activa las notificaciones y revisa la secci�n Novedades una vez por semana.',
     links: [
       {
         label: 'Calendario de oportunidades',
         url: 'https://whatsapp.com/channel/0029VbB6m3M42DcWMy5Wwh2S',
       },
     ],
-    tags: ['notificaciones', 'convocatorias', 'novedades'],
+    tags: ['notificaciones', 'convocatorias'],
   },
   {
     id: 'discounts-how',
     category: 'discounts',
-    question: '¿Cómo aprovecho un descuento en un comercio aliado?',
+    question: '�C�mo uso un descuento en un aliado?',
     answer:
-      'Busca el comercio en el catálogo o en el mapa, revisa las condiciones y presenta tu tarjeta desde el celular al momento de pagar.',
-    details: [
-      'Algunos descuentos aplican solo ciertos días u horarios.',
-    ],
-    tags: ['beneficios', 'catalogo', 'mapa'],
+      'Busca el comercio en el cat�logo o mapa, revisa las condiciones y muestra tu tarjeta desde el celular al pagar.',
+    details: ['Algunos aliados solo aplican el beneficio en d�as u horarios espec�ficos.'],
+    tags: ['beneficios', 'mapa'],
   },
   {
     id: 'new-allies',
     category: 'discounts',
-    question: '¿Con qué frecuencia se actualizan los descuentos?',
-    answer:
-      'Cada mes se suman nuevos aliados y se renuevan convenios existentes.',
+    question: '�Cada cu�ndo hay nuevos descuentos?',
+    answer: 'Cada mes se suman alianzas y renovamos convenios.',
     details: [
-      'Recibirás una alerta cuando se publiquen beneficios cerca a tu municipio.',
-      'Puedes sugerir aliados desde el formulario oficial.',
+      'Te avisaremos cuando haya beneficios cerca de ti.',
+      'Puedes sugerir aliados con este formulario.',
     ],
     links: [
       {
-        label: 'Formulario para sugerir nuevos convenios',
+        label: 'Sugerir un nuevo aliado',
         url: 'https://forms.cloud.microsoft/r/bXgU9VqpkN',
       },
     ],
-    tags: ['aliados', 'actualización'],
+    tags: ['aliados', 'actualizaciones'],
   },
   {
     id: 'redeem-online',
     category: 'discounts',
-    question: '¿Puedo redimir beneficios en línea?',
+    question: '�Puedo redimir beneficios en l�nea?',
     answer:
-      'Sí, algunos comercios ofrecen códigos digitales o enlaces directos. Revisa las instrucciones del beneficio antes de aplicar.',
-    tags: ['online', 'códigos', 'redimir'],
+      'S�. Algunos aliados entregan c�digos o enlaces directos. Sigue las instrucciones del beneficio antes de aplicarlo.',
+    tags: ['online', 'c�digos'],
   },
   {
     id: 'recover-access',
     category: 'support',
-    question: 'Olvidé mi contraseña, ¿qué puedo hacer?',
+    question: 'Olvid� mi contrase�a, �qu� hago?',
     answer:
-      'En la pantalla de ingreso selecciona “¿Olvidaste tu contraseña?” y recibirás un enlace de recuperación en tu correo.',
-    tags: ['contraseña', 'seguridad', 'recuperar'],
+      'En la pantalla de ingreso selecciona ��Olvidaste tu contrase�a?� y te enviaremos un enlace de recuperaci�n.',
+    tags: ['contrase�a', 'seguridad'],
   },
   {
     id: 'offline-mode',
     category: 'support',
-    question: '¿La aplicación funciona sin conexión?',
+    question: '�La app funciona sin conexi�n?',
     answer:
-      'Sí, puedes acceder a tu credencial y al centro de ayuda aunque no tengas datos. El catálogo y mapa requieren conexión para mostrar información actualizada.',
-    details: [
-      'Cuando vuelvas a conectarte, la información se sincronizará automáticamente.',
-    ],
-    tags: ['offline', 'conexión'],
+      'S�. Tu credencial y este centro de ayuda est�n disponibles sin datos. El cat�logo y el mapa necesitan conexi�n para mostrar informaci�n actualizada.',
+    details: ['Cuando vuelvas a conectarte sincronizaremos todo autom�ticamente.'],
+    tags: ['offline', 'conexi�n'],
   },
   {
     id: 'contact',
     category: 'support',
-    question: 'Necesito soporte técnico, ¿con quién hablo?',
-    answer:
-      'Escríbenos desde la app en Ajustes → Enviar comentario o utiliza la mesa de ayuda oficial.',
+    question: 'Necesito ayuda, �con qui�n hablo?',
+    answer: 'Escr�benos desde Ajustes ? Enviar comentario o usa la mesa de ayuda oficial.',
     links: [
       {
         label: 'Mesa de ayuda Tarjeta Joven',
         url: 'https://www.instagram.com/inpojuve?igsh=MW9uc3E2eTkxcWU1bg==',
       },
-      {
-        label: 'Correo de soporte',
-        url: 'participacionpcs@inpojuve.onmicrosoft.com',
-      },
     ],
-    tags: ['soporte', 'ayuda', 'contacto'],
+    tags: ['soporte', 'contacto'],
   },
 ];
 
@@ -139,8 +124,7 @@ const normalizeText = (value: string) =>
   value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '');
-
+    .replace(/[\u0300-\u036f]/g, '');
 const Help = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | HelpCategory>('all');
@@ -247,14 +231,16 @@ const Help = () => {
       <header className="help-page__header">
         <h1 id="help-title">Centro de ayuda</h1>
         <p className="help-page__intro">
-          Encuentra respuestas rápidas sobre el programa, los descuentos y el soporte técnico de Tarjeta Joven.
+          Resuelve tus dudas del programa, los descuentos y el soporte técnico en minutos.
         </p>
       </header>
 
       {isOffline && (
         <div className="help-page__offline" role="status">
-          <span aria-hidden="true">📶</span>
-          <p>Sin conexión. Mostrando contenido disponible sin internet.</p>
+          <span aria-hidden="true" role="img">
+            ⚠️
+          </span>
+          <p>Sin conexión. Mostramos la información guardada.</p>
         </div>
       )}
 
@@ -268,7 +254,7 @@ const Help = () => {
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Escribe palabras clave, por ejemplo “registro” o “soporte”"
+            placeholder="Escribe palabras clave como 'registro' o 'soporte'."
             aria-describedby="help-search-hint"
           />
           <button type="submit" className="help-page__search-button">
@@ -285,7 +271,7 @@ const Help = () => {
           </button>
         </div>
         <p id="help-search-hint" className="help-page__hint">
-          El listado se actualiza al escribir; presiona “Buscar” para registrar la consulta en analítica.
+          La lista se actualiza al escribir. Presiona “Buscar” para guardar la consulta.
         </p>
       </form>
 
@@ -306,7 +292,7 @@ const Help = () => {
       <section className="help-page__results" aria-live="polite" aria-busy={false}>
         {filteredFaqs.length === 0 ? (
           <p className="help-page__empty" role="status">
-            No encontramos resultados. Ajusta tu búsqueda o filtra por otra categoría.
+            No encontramos coincidencias. Cambia las palabras o prueba otra categoría.
           </p>
         ) : (
           <ul className="help-page__list" role="list">

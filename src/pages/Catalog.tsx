@@ -12,8 +12,8 @@ import { track } from '../lib/analytics';
 const skeletonArray = Array.from({ length: 6 }, (_, index) => index);
 
 const Catalog = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-  const [selectedMunicipality, setSelectedMunicipality] = useState<string | undefined>();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedMunicipalities, setSelectedMunicipalities] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [appliedQuery, setAppliedQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -32,12 +32,12 @@ const Catalog = () => {
     }
 
     fetchCatalog({
-      categoria: selectedCategory,
-      municipio: selectedMunicipality,
+      categoria: selectedCategories.length ? selectedCategories.join(',') : undefined,
+      municipio: selectedMunicipalities.length ? selectedMunicipalities.join(',') : undefined,
       q: appliedQuery || undefined,
       page,
     });
-  }, [selectedCategory, selectedMunicipality, appliedQuery, page, fetchCatalog]);
+  }, [selectedCategories, selectedMunicipalities, appliedQuery, page, fetchCatalog]);
 
   useEffect(() => {
     if (!data) {
@@ -89,27 +89,27 @@ const Catalog = () => {
     return false;
   }, [data]);
 
-  const handleCategoryChange = (category?: string) => {
-    setSelectedCategory(category);
+  const handleCategoryChange = (categoriesValue: string[]) => {
+    setSelectedCategories(categoriesValue);
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
     track('filter', {
       origin: 'catalog',
       type: 'category',
-      value: category ?? 'all',
+      value: categoriesValue.length ? categoriesValue.join(',') : 'all',
     });
   };
 
-  const handleMunicipalityChange = (municipality?: string) => {
-    setSelectedMunicipality(municipality);
+  const handleMunicipalityChange = (municipalitiesValue: string[]) => {
+    setSelectedMunicipalities(municipalitiesValue);
     setPage(1);
     setBenefits([]);
     setIsAwaiting(true);
     track('filter', {
       origin: 'catalog',
       type: 'municipality',
-      value: municipality ?? 'all',
+      value: municipalitiesValue.length ? municipalitiesValue.join(',') : 'all',
     });
   };
 
@@ -123,15 +123,15 @@ const Catalog = () => {
       track('search', {
         origin: 'catalog',
         query: trimmed,
-        category: selectedCategory,
-        municipality: selectedMunicipality,
+        category: selectedCategories.join(',') || undefined,
+        municipality: selectedMunicipalities.join(',') || undefined,
       });
     }
   };
 
   const handleReset = () => {
-    setSelectedCategory(undefined);
-    setSelectedMunicipality(undefined);
+    setSelectedCategories([]);
+    setSelectedMunicipalities([]);
     setQuery('');
     setAppliedQuery('');
     setPage(1);
@@ -165,17 +165,17 @@ const Catalog = () => {
       <FilterChips
         categories={categories}
         municipalities={municipalities}
-        selectedCategory={selectedCategory}
-        selectedMunicipality={selectedMunicipality}
+        selectedCategories={selectedCategories}
+        selectedMunicipalities={selectedMunicipalities}
         query={query}
         onQueryChange={setQuery}
-        onCategoryChange={handleCategoryChange}
-        onMunicipalityChange={handleMunicipalityChange}
+        onCategoriesChange={handleCategoryChange}
+        onMunicipalitiesChange={handleMunicipalityChange}
         onSearch={handleSearch}
         onReset={handleReset}
       />
 
-      <section className="catalog-page__grid" aria-live="polite">
+      <section className="catalog-page__list" aria-live="polite" role="list">
         {(isLoading || (isFetching && page === 1) || (isAwaiting && page === 1)) && (
           <div className="catalog-page__skeletons" aria-hidden="true">
             {skeletonArray.map((item) => (
@@ -196,9 +196,14 @@ const Catalog = () => {
         )}
 
         <LayoutGroup>
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {benefits.map((benefit) => (
-              <BenefitCard key={benefit.id} benefit={benefit} onOpen={openModal} />
+              <BenefitCard
+                key={benefit.id}
+                benefit={benefit}
+                onOpen={openModal}
+                isSelected={selectedBenefit?.id === benefit.id}
+              />
             ))}
           </AnimatePresence>
         </LayoutGroup>

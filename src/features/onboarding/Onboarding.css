@@ -1,145 +1,158 @@
-.onboarding-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(20, 54, 60, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  z-index: 1000;
-}
-
-.onboarding-container {
-  width: min(560px, 100%);
+.welcome-carousel {
+  margin: clamp(16px, 5vw, 40px) auto;
+  padding: clamp(16px, 4vw, 32px);
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 32px 28px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+  max-width: 960px;
 }
 
-.onboarding-header {
+.welcome-carousel__head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
 }
 
-.onboarding-title {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--color-primary-600);
-}
-
-.onboarding-step {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.onboarding-step__badge {
-  align-self: flex-start;
-  background: var(--color-primary-100);
-  color: var(--color-primary-600);
-  border-radius: 999px;
-  padding: 6px 12px;
+.welcome-carousel__tag {
   font-weight: 600;
-  font-size: 0.85rem;
+  color: var(--color-heading);
+  background: rgba(var(--color-secondary-bright-rgb), 0.18);
+  border-radius: 999px;
+  padding: 6px 14px;
 }
 
-.onboarding-step__content {
+.welcome-carousel__skip {
+  border: none;
+  background: none;
+  color: var(--color-accent-500);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.welcome-carousel__viewport {
+  overflow: hidden;
+}
+
+.welcome-carousel__track {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: var(--color-neutral-700);
+  gap: 24px;
+  transition: transform var(--transition-base);
 }
 
-.onboarding-step__content ul {
+.welcome-carousel__slide {
+  min-width: 100%;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: center;
+}
+
+.welcome-carousel__media {
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-md);
+  padding: clamp(16px, 3vw, 32px);
+  display: flex;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.welcome-carousel__content h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--color-heading);
+}
+
+.welcome-carousel__content p {
   margin: 0;
+  color: var(--color-neutral-700);
+  font-size: 1rem;
+}
+
+.welcome-carousel__content ul {
+  margin: 12px 0 0;
   padding-left: 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  color: var(--color-heading);
+  font-weight: 600;
 }
 
-.onboarding-actions {
+.welcome-carousel__step {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-neutral-500);
+}
+
+.welcome-carousel__footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.welcome-carousel__indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.welcome-carousel__indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--color-neutral-300);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.welcome-carousel__indicator--active {
+  background: var(--color-accent-500);
+  border-color: var(--color-accent-500);
+}
+
+.welcome-carousel__nav {
+  display: flex;
   gap: 12px;
 }
 
-.onboarding-actions__left {
-  display: flex;
-  gap: 8px;
-}
-
-.onboarding-button {
-  border: none;
-  cursor: pointer;
+.welcome-carousel__nav button {
+  border-radius: 999px;
+  border: 1px solid var(--color-neutral-300);
+  padding: 10px 20px;
   font-weight: 600;
-  border-radius: var(--radius-sm);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  background: var(--color-surface);
+  cursor: pointer;
 }
 
-.onboarding-button[disabled] {
-  opacity: 0.5;
+.welcome-carousel__nav button:last-child {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: var(--color-primary-500);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(5, 90, 28, 0.25);
+}
+
+.welcome-carousel__nav button:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.onboarding-button--primary {
-  background: var(--color-primary-500);
-  color: #fff;
-  padding: 10px 20px;
-  box-shadow: var(--shadow-sm);
-}
-
-.onboarding-button--primary:hover,
-.onboarding-button--primary:focus-visible {
-  transform: translateY(-1px);
-}
-
-.onboarding-button--secondary {
-  background: transparent;
-  color: var(--color-neutral-600);
-  padding: 10px 16px;
-}
-
-.onboarding-progress {
-  display: flex;
-  gap: 8px;
-}
-
-.onboarding-progress__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--color-neutral-300);
-  transition: background var(--transition-base);
-}
-
-.onboarding-progress__dot--active {
-  background: var(--color-primary-500);
-}
-
-.onboarding-close {
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--color-neutral-600);
-  padding: 4px;
-  line-height: 0;
-}
-
-@media (max-width: 480px) {
-  .onboarding-container {
-    padding: 24px 20px;
+@media (max-width: 640px) {
+  .welcome-carousel__slide {
+    grid-template-columns: 1fr;
   }
 
-  .onboarding-title {
-    font-size: 1.3rem;
+  .welcome-carousel__nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .welcome-carousel__nav button {
+    flex: 1;
   }
 }

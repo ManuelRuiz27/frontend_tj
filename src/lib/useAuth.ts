@@ -70,14 +70,14 @@ export const useAuth = () => {
         const authTokens = await authApi.login(normalizedCredentials);
         const profile = await applyTokens(authTokens);
         if (!profile) {
-          throw new Error('No pudimos completar el inicio de sesion.');
+          throw new Error('No pudimos completar el inicio de sesión.');
         }
         return true;
       } catch (error) {
         const message =
           isApiError(error) && (error.status === 400 || error.status === 401)
             ? 'Credenciales invalidas.'
-            : 'No pudimos iniciar sesion. Intenta nuevamente.';
+            : 'No pudimos iniciar sesión. Intenta de nuevo.';
         setStatus('unauthenticated');
         setErrorMessage(message);
         throw new Error(message);
@@ -90,7 +90,7 @@ export const useAuth = () => {
     async (authTokens: AuthTokens) => {
       const profile = await applyTokens(authTokens);
       if (!profile) {
-        throw new Error('No pudimos completar el inicio de sesion.');
+        throw new Error('No pudimos completar el inicio de sesión.');
       }
       return true;
     },
@@ -102,7 +102,7 @@ export const useAuth = () => {
       await authApi.logout();
     } catch (error) {
       if (!isApiError(error) || error.status >= 500) {
-        setErrorMessage('No pudimos cerrar la sesion correctamente.');
+        setErrorMessage('No pudimos cerrar la sesión correctamente.');
       }
     } finally {
       clearStoredTokens();

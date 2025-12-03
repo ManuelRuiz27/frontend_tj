@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import './Profile.css';
 
@@ -47,7 +49,9 @@ const getAgeFromCurp = (curp: string): number | null => {
 };
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const displayName = useMemo(() => {
     const parts = [user?.nombre, user?.apellidos].filter(Boolean);
@@ -61,10 +65,20 @@ const Profile = () => {
     return user?.curp ? getAgeFromCurp(user.curp) ?? DEFAULT_PROFILE.age : DEFAULT_PROFILE.age;
   }, [user?.edad, user?.curp]);
 
-  const barcodeValue = useMemo(
+  const qrValue = useMemo(
     () => user?.barcodeValue ?? user?.curp ?? DEFAULT_PROFILE.barcode,
     [user?.barcodeValue, user?.curp],
   );
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <main className="profile-page" aria-labelledby="profile-title">
@@ -75,6 +89,20 @@ const Profile = () => {
       <section className="profile-card" aria-labelledby="profile-credential-title">
         <div className="profile-card__background" aria-hidden="true" />
         <div className="profile-card__content">
+          <div className="profile-card__qr">
+            <QRCodeSVG
+              className="profile-card__qr-code"
+              value={qrValue}
+              level="M"
+              includeMargin
+              bgColor="#ffffff"
+              fgColor="#101a16"
+              role="img"
+              aria-label={`Codigo QR asignado ${qrValue}`}
+              title={qrValue}
+            />
+            <span className="profile-card__qr-value">{qrValue}</span>
+          </div>
           <div className="profile-card__details">
             <h2 id="profile-credential-title">Tarjeta Joven</h2>
             <dl className="profile-card__list">
@@ -89,15 +117,6 @@ const Profile = () => {
             </dl>
           </div>
         </div>
-        <div
-          className="profile-card__barcode"
-          role="img"
-          aria-label={`Codigo de barras asignado ${barcodeValue}`}
-          data-barcode={barcodeValue}
-          title={barcodeValue}
-        >
-          <span className="profile-card__barcode-lines" />
-        </div>
       </section>
 
       <div
@@ -105,6 +124,14 @@ const Profile = () => {
         role="img"
         aria-label="Imagen representativa de Tarjeta Joven"
       />
+      <button
+        type="button"
+        className="profile-logout"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+      >
+        {isLoggingOut ? 'Cerrando sesion...' : 'Cerrar sesion'}
+      </button>
     </main>
   );
 };
